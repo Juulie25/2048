@@ -7,8 +7,7 @@
 # r -> reward : 
 # a -> action réalisée (G/D/H/B)
 # P(x) -> fonction de transition 
-# R(x) -> fonction de reward 
-import numpy
+# R(x) -> fonction de reward
 import pygame
 
 def __init__(self):
@@ -62,6 +61,22 @@ def __init__(self):
         action = evaluate()
         self.score += action_choisie
 
+#Copie proprement les grilles
+def gridCopy(grid):
+    res = [[0 for _ in range(4)] for _ in range(4)]
+    for i in range(0,4):
+        for j in range(0,4):
+            res[i][j] = grid[i][j]
+    return res
+
+#Compte le nombre d'espace vide dans la grille
+def numberHoles(grid):
+    nbrHoles = 0
+    for i in range(0, 4):
+        for j in range(0, 4):
+            if(grid[i][j]==0):
+                nbrHoles +=1
+    return nbrHoles
 
 def is_game_over(self):
     empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
@@ -82,17 +97,17 @@ def is_game_over(self):
 #test tous les actions possibles et renvoie la meilleure
 # 1. on regarde quelle action renvoie le meilleure score
 # 2. si egalité alors on regarde la place libérée
-# 3. si éaglité alors on regarde celle qui crée le moins de trou
+# 3. si éaglité alors on regarde celle qui crée le moins de trou -> IMPOSSIBLE D'AVOIR DES TROUS DANS UN 2048 mdrrr
 def evaluate(self):
     action_choisie = None
-    score = 0
-    espace_libre = 0
+    grid_copy = gridCopy(self.grid)
+    score = move_tiles_left(grid_copy)
+    espace_libre = numberHoles(grid_copy)
     trous = 0
 
-    #TODO: créer un nouvel objet qui reprend les valeurs de la grille actuelle
-    grid_copy = numpy.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-
-    #TODO :revoir l'appel des mouvements
+    #TODO :revoir l'appel des mouvements pour qu'ils renvoient le score et le nombre de trous
+    # Tu es sur que c'est plus simple que ce soit la fonction de mouvement qui renvoie ce genre d'informations ?
+    # C'est pas plus simple de pouvoir stocker les 4 grilles (4 mouvements) et d'appliquer ensuite les fonctions ?
     for action in self.actions:
         score_tmp = move_tiles_left()
         if score_tmp > score :
@@ -100,9 +115,11 @@ def evaluate(self):
             action_choisie = action
         else :
             if score == score_tmp:
-                # regarder la place libérée
-                # si égalité alors
-                    # nombre de trous créés
+                espace_tmp = move_tiles_left()
+                if espace_tmp > espace_libre :
+                    espace_libre = espace_tmp
+                    action_choisie = action
+
     return action_choisie
 
 def move_tiles_left(self):
@@ -155,30 +172,33 @@ def learnEvaluation(s, a, r, s0, s00):
     vnext = maxa0∈A(s00) Va0 (s00)
     Va(s) = Va(s) + α(r + vnext − Va(s))
 
-#The state evaluation function and TD(0) ->  Evaluating states
-#évaluer les états dans lesquels ils aboutissent avec la fonction de valeur d'état V (s)
-#méthode plus lente car doit évaluer tous les coups possibles à chaque fois
-def evaluate(s,a):
-    s0, r = COMPUTE AFTERSTATE(s, a)
-    S00 = ALL POSSIBLE NEXT STATES(s0)
-    return r + (somme s00∈S00) P(s, a, s00)V (s00)
 
-def learnEvaluation(s, a, r, s0, s00):
-    V (s) = V (s) + αlpha(r + V (s00) − V (s))
+#==============================AUTRES IDEES POUR LA SUITE==============================#
 
-#The afterstate evaluation function ->  Evaluating afterstates
-# evaluate moves can be regarded as a combination of the action evaluation and the state evaluation 
-# updates the value of the recently observed afterstate
-def evaluate(s,a):
-    s0, r = COMPUTE AFTERSTATE(s, a)
-    return r + V(s0)
-
-def learnEvaluation(s, a, r, s0, s00):
-    #determining the next action that would be taken
-    anext = arg maxa0∈A(s00) EVALUATE(s00, a0)
-    #compute the next reward and the new afterstate
-    s0next, rnext = COMPUTE AFTERSTATE(s00, anext)
-    V (s0) = V (s0) + α(rnext + V (s0next) − V (s0))
-
-# n-tuple network
-# For a given board state s, it calculates the sum of values returned by the individual n-tuples
+# #The state evaluation function and TD(0) ->  Evaluating states
+# #évaluer les états dans lesquels ils aboutissent avec la fonction de valeur d'état V (s)
+# #méthode plus lente car doit évaluer tous les coups possibles à chaque fois
+# def evaluate(s,a):
+#     s0, r = COMPUTE AFTERSTATE(s, a)
+#     S00 = ALL POSSIBLE NEXT STATES(s0)
+#     return r + (somme s00∈S00) P(s, a, s00)V (s00)
+#
+# def learnEvaluation(s, a, r, s0, s00):
+#     V (s) = V (s) + αlpha(r + V (s00) − V (s))
+#
+# #The afterstate evaluation function ->  Evaluating afterstates
+# # evaluate moves can be regarded as a combination of the action evaluation and the state evaluation
+# # updates the value of the recently observed afterstate
+# def evaluate(s,a):
+#     s0, r = COMPUTE AFTERSTATE(s, a)
+#     return r + V(s0)
+#
+# def learnEvaluation(s, a, r, s0, s00):
+#     #determining the next action that would be taken
+#     anext = arg maxa0∈A(s00) EVALUATE(s00, a0)
+#     #compute the next reward and the new afterstate
+#     s0next, rnext = COMPUTE AFTERSTATE(s00, anext)
+#     V (s0) = V (s0) + α(rnext + V (s0next) − V (s0))
+#
+# # n-tuple network
+# # For a given board state s, it calculates the sum of values returned by the individual n-tuples
