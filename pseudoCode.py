@@ -1,4 +1,4 @@
-#Défintion des variables 
+#Définition des variables
 # s -> configuration actuelle du plateau (temps t)
 # s == grid
 
@@ -59,7 +59,7 @@ def __init__(self):
 
     while not is_game_over():
         action = evaluate()
-        self.score += action_choisie
+        self.score += action
 
 #Copie proprement les grilles
 def gridCopy(grid):
@@ -69,15 +69,6 @@ def gridCopy(grid):
             res[i][j] = grid[i][j]
     return res
 
-#Compte le nombre d'espace vide dans la grille
-def numberHoles(grid):
-    nbrHoles = 0
-    for i in range(0, 4):
-        for j in range(0, 4):
-            if(grid[i][j]==0):
-                nbrHoles +=1
-    return nbrHoles
-
 def is_game_over(self):
     empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
     if empty_cells: return False
@@ -85,7 +76,7 @@ def is_game_over(self):
         for j in range(3):
             if self.grid[i][j] == self.grid[i + 1][j] or self.grid[i][j] == self.grid[i][j + 1]:
                 return False
-    # Check the last row and column separately
+    # Comparer les dernières lignes et colonnes séparément
     for i in range(3):
         if self.grid[3][i] == self.grid[3][i + 1]:
             return False
@@ -93,21 +84,39 @@ def is_game_over(self):
             return False
     return True
 
-# TODO : implémneter la fonction entièrement
-#test tous les actions possibles et renvoie la meilleure
-# 1. on regarde quelle action renvoie le meilleure score
-# 2. si egalité alors on regarde la place libérée
-# 3. si éaglité alors on regarde celle qui crée le moins de trou -> IMPOSSIBLE D'AVOIR DES TROUS DANS UN 2048 mdrrr
+ #TODO :revoir l'appel des mouvements pour qu'ils renvoient le score et le nombre de trous
+# Tu es sur que c'est plus simple que ce soit la fonction de mouvement qui renvoie ce genre d'informations ?
+# C'est pas plus simple de pouvoir stocker les 4 grilles (4 mouvements) et d'appliquer ensuite les fonctions ?
 def evaluate(self):
     action_choisie = None
-    grid_copy = gridCopy(self.grid)
-    score = move_tiles_left(grid_copy)
-    espace_libre = numberHoles(grid_copy)
-    trous = 0
+    score = 0
+    list_grid = [0 for _ in range(4)]
 
-    #TODO :revoir l'appel des mouvements pour qu'ils renvoient le score et le nombre de trous
-    # Tu es sur que c'est plus simple que ce soit la fonction de mouvement qui renvoie ce genre d'informations ?
-    # C'est pas plus simple de pouvoir stocker les 4 grilles (4 mouvements) et d'appliquer ensuite les fonctions ?
+    #On définit les 4 copies de la grille actuelle pour appliquer sur chacune d'entre elle une action
+    for i in range(len(list_grid)):
+        list_grid[i] = gridCopy(self.grid)
+        if i == 0:
+            score_tmp = move_tiles_right(list_grid[i])
+            if score_tmp > score:
+                score = score_tmp
+                action_choisie = "right"
+        if i == 1:
+            score_tmp = move_tiles_left(list_grid[i])
+            if score_tmp > score:
+                score = score_tmp
+                action_choisie = "left"
+        if i == 2:
+            score_tmp = move_tiles_up(list_grid[i])
+            if score_tmp > score:
+                score = score_tmp
+                action_choisie = "up"
+        if i == 3:
+            score_tmp = move_tiles_down(list_grid[i])
+            if score_tmp > score:
+                score = score_tmp
+                action_choisie = "down"
+
+
     for action in self.actions:
         score_tmp = move_tiles_left()
         if score_tmp > score :
@@ -122,9 +131,10 @@ def evaluate(self):
 
     return action_choisie
 
-def move_tiles_left(self):
+
+def move_tiles_left(grid):
     score = 0
-    for row in self.grid:
+    for row in grid:
         row.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
         for i in range(3):
             if row[i] == row[i + 1]:
@@ -132,6 +142,50 @@ def move_tiles_left(self):
                 score += row[i]
                 row[i + 1] = 0
         row.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
+    return score
+
+
+def move_tiles_right(grid):
+    score = 0
+    for row in grid:
+        row.sort(key=lambda x: 0 if x == 0 else 1)
+        for i in range(3, 0, -1):
+            if row[i] == row[i - 1]:
+                row[i] *= 2
+                score += row[i]
+                row[i - 1] = 0
+        row.sort(key=lambda x: 0 if x == 0 else 1)
+    return score
+
+
+def move_tiles_up(grid):
+    score = 0
+    for j in range(4):
+        col = [grid[i][j] for i in range(4)]
+        col.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
+        for i in range(3):
+            if col[i] == col[i + 1]:
+                col[i] *= 2
+                score += col[i]
+                col[i + 1] = 0
+        col.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
+        for i in range(4):
+            grid[i][j] = col[i]
+    return score
+
+def move_tiles_down(grid):
+    score = 0
+    for j in range(4):
+        col = [grid[i][j] for i in range(4)]
+        col.sort(key=lambda x: 0 if x == 0 else 1)
+        for i in range(3, 0, -1):
+            if col[i] == col[i - 1]:
+                col[i] *= 2
+                score += col[i]
+                col[i - 1] = 0
+        col.sort(key=lambda x: 0 if x == 0 else 1)
+        for i in range(4):
+            grid[i][j] = col[i]
     return score
 
 def playGame() :
