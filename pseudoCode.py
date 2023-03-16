@@ -27,6 +27,9 @@ def __init__(self):
         [0, 0, 0, 0],
     ]
 
+    self.afterstate = self.grid
+    self.addtile = self.grid
+
     self.tilesColor = {
         0: "#BFB3A5",
         2: "#FAE7E0",
@@ -57,6 +60,7 @@ def __init__(self):
 
     self.score = 0
     self.nbMove = 0
+    self.learn = True
     self.add_new_tile()
     self.add_new_tile()
 
@@ -65,6 +69,7 @@ def __init__(self):
     tuple_u = []
     tuple_d = []
     for i in range (NTUPLES):
+        #TODO : a changer avec dict ?
         tuple_l[i] = map()
         tuple_r[i] = map()
         tuple_u[i] = map()
@@ -84,9 +89,12 @@ def __init__(self):
     while not is_game_over():
         action = evaluate()
         self.score += make_move(self.grid,action)
+        self.afterstate = self.grid
         self.nbMove = self.nbMove + 1
         self.add_new_tile()
-    #learn pour améliorer ses coups
+        self.addtile = self.grid
+    if self.learn:
+        learn_evaluation(self, action, reward)
 
 
 #Copie proprement les grilles
@@ -117,19 +125,21 @@ def evaluate(self, action):
     reward = 0
     a = self.v_actions[action]
     for i in range(17):
-        if lireTuple(i) in a:
-            reward += a(lireTuple(i))
+        if read_tuple(i) in a:
+            reward += a[i][read_tuple(i)]
     return reward
-    
-
-        #si la ligne de la grille est présente dans la liste des tuples alors
-            #reward += valeur de la ligne du tableau
-        reward += tuples[i].map().value
 
 
-    # pour accéder à la grille actuelle : self.grid
-    # TODO : tout changer pour choisir l'action en fonction de la valeur dans la table des n-tuples
-    # TODO : on parcourt la table (les 4 lignes possibles par état) et on prend celle qui a le meilleur poids)
+#grid, action, reward, grid_afterstate, grid_addtile
+def learn_evaluation(self, action, reward):
+    # a partir de S'' on regarde les 4 actions et on prend la meilleure valeur => dans les tables,
+    # calculer les coordonnées pour tous les n-tuples et faire la somme des 3 tuples et on la renvoie
+    # puis récupérer le max entre les 4 valeurs
+    #vnext = maxa0∈A(s00) Va0 (s00)
+    vnext = "oui"
+    #Va(s) = Va(s) + α(r + vnext − Va(s))
+    self.v_actions[action] = self.v_actions[action] + alpha*(reward + vnext-self.v_actions[action])
+
 
 
 def move_tiles_left(grid):
@@ -207,40 +217,42 @@ def make_move(grid, action):
         return move_tiles_down(grid)
 
 #renvoie la valeur de la ligne
-def lireTuple(self,i):
-    if (i<4):
+def read_tuple(self,i):
+    if i < 4:
         res0 = math.log2(self.grid[i][0])
         res1 = math.log2(self.grid[i][1])
         res2 = math.log2(self.grid[i][2])
         res3 = math.log2(self.grid[i][3])
         return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
-    if(i>=4 && i<8):
+    if 4 <= i < 8:
         res0 = math.log2(self.grid[0][i])
         res1 = math.log2(self.grid[1][i])
         res2 = math.log2(self.grid[2][i])
         res3 = math.log2(self.grid[3][i])
         return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
-    if(i>=8):
-        if(i>7 && i<11):a=0
-        if(i>=11 && i<14):a=1
-        if(i>=14):a=2
+    if i>=8 :
+        if i>7 & i<11:a=0
+        if i>=11 & i<14:a=1
+        if i>=14:a=2
         res0 = math.log2(self.grid[a][a])
         res1 = math.log2(self.grid[a][a+1])
         res2 = math.log2(self.grid[a+1][a])
         res3 = math.log2(self.grid[a+1][a+1])
         return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
 
-def playGame() :
-    score = 0
-    s = INITIALIZE GAME STATE
-    while (not IS TERMINAL STATE(s)):
-        a =  arg maxa0∈A(s) EVALUATE(s, a)
-        r, s0, s00 = MAKE MOVE(s, a)
-    if LEARNING ENABLED :
-        LEARN EVALUATION(s, a, r, s0, s00)
-    score = score + r
-    s = s00
-    return score
+
+#==============================PSEUDO CODE ==============================#
+# def playGame() :
+#     score = 0
+#     s = INITIALIZE GAME STATE
+#     while (not IS TERMINAL STATE(s)):
+#         a =  arg maxa0∈A(s) EVALUATE(s, a)
+#         r, s0, s00 = MAKE MOVE(s, a)
+#     if LEARNING ENABLED :
+#         LEARN EVALUATION(s, a, r, s0, s00)
+#     score = score + r
+#     s = s00
+#     return score
 
 # for a given state s ∈ S and action a ∈ A(s) returns a received reward and an observed state transition
 # def makeMove(s,a):
@@ -261,12 +273,12 @@ def playGame() :
 
 
 #The action evaluation function and Q-LEARNING ->  Evaluating actions
-def evaluate(s,a):
-    return Va(s)
-
-def learnEvaluation(s, a, r, s0, s00):
-    vnext = maxa0∈A(s00) Va0 (s00)
-    Va(s) = Va(s) + α(r + vnext − Va(s))
+# def evaluate(s,a):
+#     return Va(s)
+#
+# def learnEvaluation(s, a, r, s0, s00):
+#     vnext = maxa0∈A(s00) Va0 (s00)
+#     Va(s) = Va(s) + α(r + vnext − Va(s))
 
 #une table par état et par action
 #Va(s) : somme des poids des n-tuples en fonction de l'action
