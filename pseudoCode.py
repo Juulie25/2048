@@ -4,7 +4,7 @@
 
 # s0 -> configuration du plateau a t+1, lorsque l'action de déplacement a été faite = AFTER STATE
 # s00 -> configuration du plateau a t+2, une nouvelle tuile est ajoutée
-# r -> reward : 
+# r -> reward : score
 # a -> action réalisée (G/D/H/B)
 # P(x) -> fonction de transition 
 # R(x) -> fonction de reward
@@ -60,7 +60,9 @@ def __init__(self):
     while not is_game_over():
         action = evaluate()
         self.score += make_move(self.grid,action)
-    #learn pour améliorer ses coups 
+        self.nbMove = self.nbMove + 1
+        self.add_new_tile()
+    #learn pour améliorer ses coups
 
 
 #Copie proprement les grilles
@@ -89,9 +91,9 @@ def is_game_over(self):
 
 def evaluate(self):
     action_choisie = None
-    score = 0
-    espace = 0
-    list_grid = [0 for _ in range(4)]
+    score : int = 0
+    espace : int = 0
+    list_grid : list = [0 for _ in range(4)]
 
     #On définit les 4 copies de la grille actuelle pour appliquer sur chacune d'entre elle une action
     for i in range(len(list_grid)):
@@ -203,8 +205,18 @@ def espace_libere(grid):
     for x in len(grid):
         for y in len(grid[0]):
             if grid[x,y] == 0:
-                espace_libre+1
+                espace_libre = espace_libre+1
     return espace_libre
+
+def make_move(grid, action):
+    if action == "right":
+        return move_tiles_right(grid)
+    if action == "left":
+        return move_tiles_left(grid)
+    if action == "up":
+        return move_tiles_up(grid)
+    if action == "down":
+        return move_tiles_down(grid)
 
 
 def playGame() :
@@ -220,10 +232,10 @@ def playGame() :
     return score
 
 # for a given state s ∈ S and action a ∈ A(s) returns a received reward and an observed state transition
-def makeMove(s,a):
-    s0, r = COMPUTE AFTERSTATE(s, a)
-    s00 = ADD RANDOM TILE(s0)
-    return (r, s0, s00)
+# def makeMove(s,a):
+#     s0, r = COMPUTE AFTERSTATE(s, a)
+#     s00 = ADD RANDOM TILE(s0)
+#     return (r, s0, s00)
 
 #Les couples de méthodes ne se basent pas sur les memes configurations de départ 
 
