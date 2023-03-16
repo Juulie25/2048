@@ -59,7 +59,9 @@ def __init__(self):
 
     while not is_game_over():
         action = evaluate()
-        self.score += action
+        self.score += make_move(self.grid,action)
+    #learn pour améliorer ses coups 
+
 
 #Copie proprement les grilles
 def gridCopy(grid):
@@ -84,16 +86,12 @@ def is_game_over(self):
             return False
     return True
 
- #TODO :revoir l'appel des mouvements pour qu'ils renvoient le score et le nombre de trous
-# Tu es sur que c'est plus simple que ce soit la fonction de mouvement qui renvoie ce genre d'informations ?
-# C'est pas plus simple de pouvoir stocker les 4 grilles (4 mouvements) et d'appliquer ensuite les fonctions ?
 
 def evaluate(self):
     action_choisie = None
     score = 0
     espace = 0
     list_grid = [0 for _ in range(4)]
-
 
     #On définit les 4 copies de la grille actuelle pour appliquer sur chacune d'entre elle une action
     for i in range(len(list_grid)):
@@ -201,8 +199,13 @@ def move_tiles_down(grid):
     return score
 
 def espace_libere(grid):
-    espace_libre = 0;
-    
+    espace_libre = 0
+    for x in len(grid):
+        for y in len(grid[0]):
+            if grid[x,y] == 0:
+                espace_libre+1
+    return espace_libre
+
 
 def playGame() :
     score = 0
