@@ -87,10 +87,13 @@ def is_game_over(self):
  #TODO :revoir l'appel des mouvements pour qu'ils renvoient le score et le nombre de trous
 # Tu es sur que c'est plus simple que ce soit la fonction de mouvement qui renvoie ce genre d'informations ?
 # C'est pas plus simple de pouvoir stocker les 4 grilles (4 mouvements) et d'appliquer ensuite les fonctions ?
+
 def evaluate(self):
     action_choisie = None
     score = 0
+    espace = 0
     list_grid = [0 for _ in range(4)]
+
 
     #On définit les 4 copies de la grille actuelle pour appliquer sur chacune d'entre elle une action
     for i in range(len(list_grid)):
@@ -100,37 +103,46 @@ def evaluate(self):
             if score_tmp > score:
                 score = score_tmp
                 action_choisie = "right"
+            else:
+                if score == score_tmp:
+                    espace_tmp = espace_libere(list_grid[i])
+                    if espace_tmp > espace:
+                        espace = espace_tmp
+                        action_choisie = "right"
         if i == 1:
             score_tmp = move_tiles_left(list_grid[i])
             if score_tmp > score:
                 score = score_tmp
                 action_choisie = "left"
+            else:
+                if score == score_tmp:
+                    espace_tmp = espace_libere(list_grid[i])
+                    if espace_tmp > espace:
+                        espace = espace_tmp
+                        action_choisie = "left"
         if i == 2:
             score_tmp = move_tiles_up(list_grid[i])
             if score_tmp > score:
                 score = score_tmp
                 action_choisie = "up"
+            else:
+                if score == score_tmp:
+                    espace_tmp = espace_libere(list_grid[i])
+                    if espace_tmp > espace:
+                        espace = espace_tmp
+                        action_choisie = "up"
         if i == 3:
             score_tmp = move_tiles_down(list_grid[i])
             if score_tmp > score:
                 score = score_tmp
                 action_choisie = "down"
-
-
-    for action in self.actions:
-        score_tmp = move_tiles_left()
-        if score_tmp > score :
-            score = score_tmp
-            action_choisie = action
-        else :
-            if score == score_tmp:
-                espace_tmp = move_tiles_left()
-                if espace_tmp > espace_libre :
-                    espace_libre = espace_tmp
-                    action_choisie = action
-
+            else:
+                if score == score_tmp:
+                    espace_tmp = espace_libere(list_grid[i])
+                    if espace_tmp > espace:
+                        espace = espace_tmp
+                        action_choisie = "left"
     return action_choisie
-
 
 def move_tiles_left(grid):
     score = 0
@@ -187,6 +199,10 @@ def move_tiles_down(grid):
         for i in range(4):
             grid[i][j] = col[i]
     return score
+
+def espace_libere(grid):
+    espace_libre = 0;
+    
 
 def playGame() :
     score = 0
