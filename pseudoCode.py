@@ -8,7 +8,14 @@
 # a -> action réalisée (G/D/H/B)
 # P(x) -> fonction de transition 
 # R(x) -> fonction de reward
+
+# map avec état action en clé et la valeur en valeur
+# fichier à enregister sur une représentation binaire (serialisation) et à lire a chaque nouvelle partie
+
 import pygame
+import pickle
+
+NTUPLES = 17
 
 def __init__(self):
     # grille complète
@@ -41,10 +48,10 @@ def __init__(self):
     }
 
     self.actions = {
-        "UP",
-        "DOWN",
         "LEFT",
-        "RIGHT"
+        "RIGHT",
+        "UP",
+        "DOWN"
     }
 
     self.score = 0
@@ -52,10 +59,26 @@ def __init__(self):
     self.add_new_tile()
     self.add_new_tile()
 
+    tuple_l = []
+    tuple_r = []
+    tuple_u = []
+    tuple_d = []
+    for i in range (NTUPLES):
+        tuple_l[i] = map()
+        tuple_r[i] = map()
+        tuple_u[i] = map()
+        tuple_d[i] = map()
+
+    self.v_actions = [tuple_l, tuple_r, tuple_u, tuple_d]
+
+    with open('tuples2048', 'wb') as file:
+        pickle.dump(self.v_actions, file)
+
     pygame.init()
     self.font = pygame.font.SysFont("Arial", 36)
     self.screen = pygame.display.set_mode((400, 500))
     pygame.display.set_caption("2048 Game")
+
 
     while not is_game_over():
         action = evaluate()
@@ -89,60 +112,20 @@ def is_game_over(self):
     return True
 
 
-def evaluate(self):
-    action_choisie = None
-    score : int = 0
-    espace : int = 0
-    list_grid : list = [0 for _ in range(4)]
+def evaluate(self, action):
+    reward = 0
+    tuples = self.v_actions[action]
+    
 
-    #On définit les 4 copies de la grille actuelle pour appliquer sur chacune d'entre elle une action
-    for i in range(len(list_grid)):
-        list_grid[i] = gridCopy(self.grid)
-        if i == 0:
-            score_tmp = move_tiles_right(list_grid[i])
-            if score_tmp > score:
-                score = score_tmp
-                action_choisie = "right"
-            else:
-                if score == score_tmp:
-                    espace_tmp = espace_libere(list_grid[i])
-                    if espace_tmp > espace:
-                        espace = espace_tmp
-                        action_choisie = "right"
-        if i == 1:
-            score_tmp = move_tiles_left(list_grid[i])
-            if score_tmp > score:
-                score = score_tmp
-                action_choisie = "left"
-            else:
-                if score == score_tmp:
-                    espace_tmp = espace_libere(list_grid[i])
-                    if espace_tmp > espace:
-                        espace = espace_tmp
-                        action_choisie = "left"
-        if i == 2:
-            score_tmp = move_tiles_up(list_grid[i])
-            if score_tmp > score:
-                score = score_tmp
-                action_choisie = "up"
-            else:
-                if score == score_tmp:
-                    espace_tmp = espace_libere(list_grid[i])
-                    if espace_tmp > espace:
-                        espace = espace_tmp
-                        action_choisie = "up"
-        if i == 3:
-            score_tmp = move_tiles_down(list_grid[i])
-            if score_tmp > score:
-                score = score_tmp
-                action_choisie = "down"
-            else:
-                if score == score_tmp:
-                    espace_tmp = espace_libere(list_grid[i])
-                    if espace_tmp > espace:
-                        espace = espace_tmp
-                        action_choisie = "left"
-    return action_choisie
+        #si la ligne de la grille est présente dans la liste des tuples alors
+            #reward += valeur de la ligne du tableau
+        reward += tuples[i].map().value
+
+
+    # pour accéder à la grille actuelle : self.grid
+    # TODO : tout changer pour choisir l'action en fonction de la valeur dans la table des n-tuples
+    # TODO : on parcourt la table (les 4 lignes possibles par état) et on prend celle qui a le meilleur poids)
+
 
 def move_tiles_left(grid):
     score = 0
@@ -219,6 +202,7 @@ def make_move(grid, action):
         return move_tiles_down(grid)
 
 
+
 def playGame() :
     score = 0
     s = INITIALIZE GAME STATE
@@ -256,6 +240,10 @@ def evaluate(s,a):
 def learnEvaluation(s, a, r, s0, s00):
     vnext = maxa0∈A(s00) Va0 (s00)
     Va(s) = Va(s) + α(r + vnext − Va(s))
+
+#une table par état et par action
+#Va(s) : somme des poids des n-tuples en fonction de l'action
+# 4 fois la meme structure avec chaque structure qui contient n tables pour chaque tuples
 
 
 #==============================AUTRES IDEES POUR LA SUITE==============================#
