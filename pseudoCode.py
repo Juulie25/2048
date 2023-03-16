@@ -14,6 +14,7 @@
 
 import pygame
 import pickle
+import math
 
 NTUPLES = 17
 
@@ -201,7 +202,111 @@ def make_move(grid, action):
     if action == "down":
         return move_tiles_down(grid)
 
-
+#renvoie la valeur de la ligne
+def lireTuple(self,i):
+    match i:
+        case 0:
+            res0 = math.log2(self.grid[0][0])
+            res1 = math.log2(self.grid[0][1])
+            res2 = math.log2(self.grid[0][2])
+            res3 = math.log2(self.grid[0][3])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 1:
+            res0 = math.log2(self.grid[1][0])
+            res1 = math.log2(self.grid[1][1])
+            res2 = math.log2(self.grid[1][2])
+            res3 = math.log2(self.grid[1][3])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 2:
+            res0 = math.log2(self.grid[2][0])
+            res1 = math.log2(self.grid[2][1])
+            res2 = math.log2(self.grid[2][2])
+            res3 = math.log2(self.grid[2][3])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 3:
+            res0 = math.log2(self.grid[3][0])
+            res1 = math.log2(self.grid[3][1])
+            res2 = math.log2(self.grid[3][2])
+            res3 = math.log2(self.grid[3][3])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 4:
+            res0 = math.log2(self.grid[0][0])
+            res1 = math.log2(self.grid[1][0])
+            res2 = math.log2(self.grid[2][0])
+            res3 = math.log2(self.grid[3][0])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 5:
+            res0 = math.log2(self.grid[0][1])
+            res1 = math.log2(self.grid[1][1])
+            res2 = math.log2(self.grid[2][1])
+            res3 = math.log2(self.grid[3][1])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 6:
+            res0 = math.log2(self.grid[0][2])
+            res1 = math.log2(self.grid[1][2])
+            res2 = math.log2(self.grid[2][2])
+            res3 = math.log2(self.grid[3][2])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 7:
+            res0 = math.log2(self.grid[0][3])
+            res1 = math.log2(self.grid[1][3])
+            res2 = math.log2(self.grid[2][3])
+            res3 = math.log2(self.grid[3][3])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 8:
+            res0 = math.log2(self.grid[0][0])
+            res1 = math.log2(self.grid[0][1])
+            res2 = math.log2(self.grid[1][0])
+            res3 = math.log2(self.grid[1][1])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 9:
+            res0 = math.log2(self.grid[0][1])
+            res1 = math.log2(self.grid[0][2])
+            res2 = math.log2(self.grid[1][1])
+            res3 = math.log2(self.grid[1][2])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 10:
+            res0 = math.log2(self.grid[0][2])
+            res1 = math.log2(self.grid[0][3])
+            res2 = math.log2(self.grid[1][2])
+            res3 = math.log2(self.grid[1][3])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 11:
+            res0 = math.log2(self.grid[1][0])
+            res1 = math.log2(self.grid[1][1])
+            res2 = math.log2(self.grid[2][0])
+            res3 = math.log2(self.grid[2][1])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 12:
+            res0 = math.log2(self.grid[1][1])
+            res1 = math.log2(self.grid[1][2])
+            res2 = math.log2(self.grid[2][1])
+            res3 = math.log2(self.grid[2][2])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 13:
+            res0 = math.log2(self.grid[1][2])
+            res1 = math.log2(self.grid[1][3])
+            res2 = math.log2(self.grid[2][2])
+            res3 = math.log2(self.grid[2][3])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 14:
+            res0 = math.log2(self.grid[2][0])
+            res1 = math.log2(self.grid[2][1])
+            res2 = math.log2(self.grid[3][0])
+            res3 = math.log2(self.grid[3][1])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 15:
+            res0 = math.log2(self.grid[2][1])
+            res1 = math.log2(self.grid[2][2])
+            res2 = math.log2(self.grid[3][1])
+            res3 = math.log2(self.grid[3][2])
+            return str(res0) + str(res1) + str(res2) + str(res3)
+        case 16:
+            res0 = math.log2(self.grid[2][2])
+            res1 = math.log2(self.grid[2][3])
+            res2 = math.log2(self.grid[3][2])
+            res3 = math.log2(self.grid[3][3])
+            return str(res0) + str(res1) + str(res2) + str(res3)
 
 def playGame() :
     score = 0
