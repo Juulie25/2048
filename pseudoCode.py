@@ -69,11 +69,10 @@ def __init__(self):
     tuple_u = []
     tuple_d = []
     for i in range (NTUPLES):
-        #TODO : a changer avec dict ?
-        tuple_l[i] = map()
-        tuple_r[i] = map()
-        tuple_u[i] = map()
-        tuple_d[i] = map()
+        tuple_l[i] = {}
+        tuple_r[i] = {}
+        tuple_u[i] = {}
+        tuple_d[i] = {}
 
     self.v_actions = [tuple_l, tuple_r, tuple_u, tuple_d]
 
@@ -85,7 +84,6 @@ def __init__(self):
     self.screen = pygame.display.set_mode((400, 500))
     pygame.display.set_caption("2048 Game")
 
-
     while not is_game_over():
         action = evaluate()
         self.score += make_move(self.grid,action)
@@ -93,17 +91,18 @@ def __init__(self):
         self.nbMove = self.nbMove + 1
         self.add_new_tile()
         self.addtile = self.grid
-    if self.learn:
-        learn_evaluation(self, action, reward)
+    # if self.learn:
+    #     learn_evaluation(self, action, reward)
 
 
-#Copie proprement les grilles
-def gridCopy(grid):
+# Copie proprement les grilles
+def grid_copy(grid):
     res = [[0 for _ in range(4)] for _ in range(4)]
     for i in range(0,4):
         for j in range(0,4):
             res[i][j] = grid[i][j]
     return res
+
 
 def is_game_over(self):
     empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
@@ -130,16 +129,16 @@ def evaluate(self, action):
     return reward
 
 
-#grid, action, reward, grid_afterstate, grid_addtile
+# grid, action, reward, grid_afterstate, grid_addtile
 def learn_evaluation(self, action, reward):
+    i = 1
     # a partir de S'' on regarde les 4 actions et on prend la meilleure valeur => dans les tables,
     # calculer les coordonnées pour tous les n-tuples et faire la somme des 3 tuples et on la renvoie
     # puis récupérer le max entre les 4 valeurs
-    #vnext = maxa0∈A(s00) Va0 (s00)
-    vnext = "oui"
-    #Va(s) = Va(s) + α(r + vnext − Va(s))
-    self.v_actions[action] = self.v_actions[action] + alpha*(reward + vnext-self.v_actions[action])
-
+    # vnext = maxa0∈A(s00) Va0 (s00)
+    # vnext = "oui"
+    # Va(s) = Va(s) + α(r + vnext − Va(s))
+    # self.v_actions[action] = self.v_actions[action] + alpha*(reward + vnext-self.v_actions[action])
 
 
 def move_tiles_left(grid):
@@ -183,6 +182,7 @@ def move_tiles_up(grid):
             grid[i][j] = col[i]
     return score
 
+
 def move_tiles_down(grid):
     score = 0
     for j in range(4):
@@ -198,6 +198,7 @@ def move_tiles_down(grid):
             grid[i][j] = col[i]
     return score
 
+
 def espace_libere(grid):
     espace_libre = 0
     for x in len(grid):
@@ -205,6 +206,7 @@ def espace_libere(grid):
             if grid[x,y] == 0:
                 espace_libre = espace_libre+1
     return espace_libre
+
 
 def make_move(grid, action):
     if action == "right":
@@ -216,7 +218,8 @@ def make_move(grid, action):
     if action == "down":
         return move_tiles_down(grid)
 
-#renvoie la valeur de la ligne
+
+# renvoie la valeur de la ligne
 def read_tuple(self,i):
     if i < 4:
         res0 = math.log2(self.grid[i][0])
