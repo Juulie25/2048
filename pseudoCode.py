@@ -15,12 +15,14 @@
 import pygame
 import pickle
 import math
+import random
 
-NTUPLES = 17
+from collections import defaultdict
 
 
 class game2048():
     def __init__(self):
+
         # grille complète
         self.grid = [
             [0, 0, 0, 0],
@@ -28,9 +30,6 @@ class game2048():
             [0, 0, 0, 0],
             [0, 0, 0, 0],
         ]
-
-        self.afterstate = self.grid
-        self.addtile = self.grid
 
         self.tilesColor = {
             0: "#BFB3A5",
@@ -60,21 +59,26 @@ class game2048():
             "DOWN"
         }
 
+        self.afterstate = self.grid
+        self.addtile = self.grid
         self.score = 0
         self.nbMove = 0
-        self.learn = True
         self.add_new_tile()
         self.add_new_tile()
+        # self.learn = True
 
         tuple_l = []
         tuple_r = []
         tuple_u = []
         tuple_d = []
-        for i in range (NTUPLES):
-            tuple_l[i] = {}
-            tuple_r[i] = {}
-            tuple_u[i] = {}
-            tuple_d[i] = {}
+        for i in range (17):
+            # il aime pas ca...
+            tuple_l[i] = {"0000":0}
+            tuple_r[i] = {"0000":0}
+            tuple_u[i] = {"0000":0}
+            tuple_d[i] = {"0000":0}
+            # tuple_l[i] = defaultdict(lambda : 0)
+            # tuple_d[i] = {}
 
         self.v_actions = [tuple_l, tuple_r, tuple_u, tuple_d]
 
@@ -88,14 +92,29 @@ class game2048():
             pickle.dump(self.v_actions, file)
 
         while not self.is_game_over():
-            action = self.evaluate()
-            self.score += self.make_move(self.grid, action)
+            #doit évaluer les 4 moves pour prendre le meilleur dans action
+            moveL = self.evaluate("LEFT")
+            moveR = self.evaluate("RIGHT")
+            moveU = self.evaluate("UP")
+            moveD = self.evaluate("DOWN")
+            if (max(moveL,moveR,moveU,moveD) == moveL): act = "LEFT"
+            if (max(moveL,moveR,moveU,moveD) == moveR): act = "RIGHT"
+            if (max(moveL,moveR,moveU,moveD) == moveU): act = "UP"
+            if (max(moveL,moveR,moveU,moveD) == moveD): act = "DOWN"
+            self.score += self.make_move(self.grid, act)
             self.afterstate = self.grid
             self.nbMove = self.nbMove + 1
             self.add_new_tile()
             self.addtile = self.grid
         # if self.learn:
         #     learn_evaluation(self, action, reward)
+
+    #Ajoute des nouvelles tuiles
+    def add_new_tile(self):
+        empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
+        if empty_cells:
+            i, j = random.choice(empty_cells)
+            self.grid[i][j] = 2 if random.random() < 0.9 else 4
 
     # Copie proprement les grilles
     def grid_copy(grid):
@@ -122,15 +141,19 @@ class game2048():
 
     def evaluate(self, action):
         reward = 0
-        a = self.v_actions[action]
+        if(action == "LEFT"): act = 1
+        if(action == "RIGHT"): act = 2
+        if(action == "UP"): act = 3
+        if(action == "DOWN"): act = 4
+        a = self.v_actions[act]
         for i in range(17):
             if self.read_tuple(i) in a:
                 reward += a[i][self.read_tuple(i)]
         return reward
 
     # grid, action, reward, grid_afterstate, grid_addtile
-    def learn_evaluation(self, action, reward):
-        i = 1
+    # def learn_evaluation(self, action, reward):
+        # i = 1
         # a partir de S'' on regarde les 4 actions et on prend la meilleure valeur => dans les tables,
         # calculer les coordonnées pour tous les n-tuples et faire la somme des 3 tuples et on la renvoie
         # puis récupérer le max entre les 4 valeurs
@@ -139,9 +162,9 @@ class game2048():
         # Va(s) = Va(s) + α(r + vnext − Va(s))
         # self.v_actions[action] = self.v_actions[action] + alpha*(reward + vnext-self.v_actions[action])
 
-    def move_tiles_left(self, grid):
+    def move_tiles_left(self):
         score = 0
-        for row in grid:
+        for row in self:
             row.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
             for i in range(3):
                 if row[i] == row[i + 1]:
@@ -151,9 +174,9 @@ class game2048():
             row.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
         return score
 
-    def move_tiles_right(self, grid):
+    def move_tiles_right(self):
         score = 0
-        for row in grid:
+        for row in self:
             row.sort(key=lambda x: 0 if x == 0 else 1)
             for i in range(3, 0, -1):
                 if row[i] == row[i - 1]:
@@ -163,10 +186,10 @@ class game2048():
             row.sort(key=lambda x: 0 if x == 0 else 1)
         return score
 
-    def move_tiles_up(grid):
+    def move_tiles_up(self):
         score = 0
         for j in range(4):
-            col = [grid[i][j] for i in range(4)]
+            col = [self[i][j] for i in range(4)]
             col.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
             for i in range(3):
                 if col[i] == col[i + 1]:
@@ -175,13 +198,13 @@ class game2048():
                     col[i + 1] = 0
             col.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
             for i in range(4):
-                grid[i][j] = col[i]
+                self[i][j] = col[i]
         return score
 
-    def move_tiles_down(grid):
+    def move_tiles_down(self):
         score = 0
         for j in range(4):
-            col = [grid[i][j] for i in range(4)]
+            col = [self[i][j] for i in range(4)]
             col.sort(key=lambda x: 0 if x == 0 else 1)
             for i in range(3, 0, -1):
                 if col[i] == col[i - 1]:
@@ -190,7 +213,7 @@ class game2048():
                     col[i - 1] = 0
             col.sort(key=lambda x: 0 if x == 0 else 1)
             for i in range(4):
-                grid[i][j] = col[i]
+                self[i][j] = col[i]
         return score
 
     def espace_libere(grid):
@@ -202,14 +225,14 @@ class game2048():
         return espace_libre
 
     def make_move(grid, action):
-        if action == "right":
-            return move_tiles_right(grid)
-        if action == "left":
-            return self.move_tiles_left(grid)
-        if action == "up":
-            return self.move_tiles_up(grid)
-        if action == "down":
-            return self.move_tiles_down(grid)
+        if action == "LEFT":
+            return grid.move_tiles_left()
+        if action == "RIGHT":
+            return grid.move_tiles_right()
+        if action == "UP":
+            return grid.move_tiles_up()
+        if action == "DOWN":
+            return grid.move_tiles_down()
 
     # renvoie la valeur de la ligne
     def read_tuple(self,i):
