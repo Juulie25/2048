@@ -58,8 +58,8 @@ class game2048:
             "DOWN"
         }
 
-        self.afterstate = self.grid
-        self.addtile = self.grid
+        self.afterstate = self.grid_copy()
+        self.initial = self.grid_copy()
         self.score = 0
         self.nbMove = 0
         self.add_new_tile()
@@ -83,14 +83,21 @@ class game2048:
         self.screen = pygame.display.set_mode((400, 500))
         pygame.display.set_caption("2048 Game")
 
-    # Ajoute des nouvelles tuiles
     def add_new_tile(self):
+        """
+        Ajout d'une nouvelle tuile sur la grille
+        :return: la grille avec une nouvelle tuile en plus
+        """
         empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
         if empty_cells:
             i, j = random.choice(empty_cells)
             self.grid[i][j] = 2 if random.random() < 0.9 else 4
 
     def is_game_over(self):
+        """
+        Test si des mouvements sont encore réalisables sur la grille
+        :return: True si la partie est finie
+        """
         empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
         if empty_cells: return False
         for i in range(3):
@@ -105,7 +112,23 @@ class game2048:
                 return False
         return True
 
+    def grid_copy(self):
+        """
+        Effectue une copie profonde de la grille actuelle
+        :return: la copie de la grille actuelle
+        """
+        res = [[0 for _ in range(4)] for _ in range(4)]
+        for i in range(0, 4):
+            for j in range(0, 4):
+                res[i][j] = self.grid[i][j]
+        return res
+
     def evaluate(self, action):
+        """
+
+        :param action:
+        :return:
+        """
         reward = 0
         if action == "LEFT": act = 0
         if action == "RIGHT": act = 1
@@ -118,6 +141,10 @@ class game2048:
         return reward
 
     def best_tile(self):
+        """
+
+        :return:
+        """
         max_tile = self.grid[0][0]
         for i in range(4):
             for j in range(4):
@@ -136,6 +163,10 @@ class game2048:
         # self.v_actions[action] = self.v_actions[action] + alpha*(reward + vnext-self.v_actions[action])
 
     def move_tiles_left(self):
+        """
+
+        :return:
+        """
         score = 0
         for row in self.grid:
             row.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
@@ -148,6 +179,10 @@ class game2048:
         return score
 
     def move_tiles_right(self):
+        """
+
+        :return:
+        """
         score = 0
         for row in self.grid:
             row.sort(key=lambda x: 0 if x == 0 else 1)
@@ -160,6 +195,10 @@ class game2048:
         return score
 
     def move_tiles_up(self):
+        """
+
+        :return:
+        """
         score = 0
         for j in range(4):
             col = [self.grid[i][j] for i in range(4)]
@@ -175,6 +214,10 @@ class game2048:
         return score
 
     def move_tiles_down(self):
+        """
+
+        :return:
+        """
         score = 0
         for j in range(4):
             col = [self.grid[i][j] for i in range(4)]
@@ -190,6 +233,11 @@ class game2048:
         return score
 
     def make_move(self, action):
+        """
+
+        :param action:
+        :return:
+        """
         if action == "LEFT":
             return self.move_tiles_left()
         if action == "RIGHT":
@@ -201,6 +249,11 @@ class game2048:
 
     # renvoie la valeur de la ligne
     def read_tuple(self, i):
+        """
+
+        :param i:
+        :return:
+        """
         if i < 4:
             res0 = math.log2(self.grid[i][0]) if self.grid[i][0] > 0 else 0
             res1 = math.log2(self.grid[i][1]) if self.grid[i][1] > 0 else 0
@@ -224,6 +277,10 @@ class game2048:
             return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
 
     def draw(self):
+        """
+
+        :return:
+        """
         self.screen.fill((255, 255, 255))
         self.font = pygame.font.SysFont("Arial", 30)
         score_text = self.font.render("Score: " + str(self.score), True, (0, 0, 0))
@@ -244,6 +301,10 @@ class game2048:
         pygame.display.update()
 
     def run(self):
+        """
+        
+        :return:
+        """
         if os.path.isfile('tuples2048'):
             with open('tuples2048', 'rb') as file:
                 print("Lecture du fichier des tuples")
@@ -265,10 +326,9 @@ class game2048:
                 if max(move_l, move_r, move_u, move_d) == move_u: act = "UP"
                 if max(move_l, move_r, move_u, move_d) == move_d: act = "DOWN"
             self.score += self.make_move(act)
-            self.afterstate = self.grid
+            self.afterstate = self.grid_copy()
             self.nbMove = self.nbMove + 1
             self.add_new_tile()
-            self.addtile = self.grid
             self.draw()
             # if self.learn:
             #     learn_evaluation(self, action, reward)
