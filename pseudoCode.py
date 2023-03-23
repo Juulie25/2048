@@ -1,13 +1,13 @@
-#Définition des variables
-# s -> configuration actuelle du plateau (temps t)
+# Définition des variables
+# s → configuration actuelle du plateau (temps t)
 # s == grid
 
-# s0 -> configuration du plateau a t+1, lorsque l'action de déplacement a été faite = AFTER STATE
-# s00 -> configuration du plateau a t+2, une nouvelle tuile est ajoutée
-# r -> reward : score
-# a -> action réalisée (G/D/H/B)
-# P(x) -> fonction de transition 
-# R(x) -> fonction de reward
+# s0 → configuration du plateau a t+1, lorsque l'action de déplacement a été faite = AFTER STATE
+# s00 → configuration du plateau a t+2, une nouvelle tuile est ajoutée
+# r → reward : score
+# a → action réalisée (G/D/H/B)
+# P(x) → fonction de transition
+# R(x) → fonction de reward
 
 # map avec état action en clé et la valeur en valeur
 # fichier à enregister sur une représentation binaire (serialisation) et à lire a chaque nouvelle partie
@@ -19,7 +19,7 @@ import random
 import os
 
 
-class game2048():
+class game2048:
     def __init__(self):
 
         # grille complète
@@ -70,11 +70,11 @@ class game2048():
         tuple_r = [0] * 17
         tuple_u = [0] * 17
         tuple_d = [0] * 17
-        for i in range (17):
-            tuple_l[i] = {"0000":0}
-            tuple_r[i] = {"0000":0}
-            tuple_u[i] = {"0000":0}
-            tuple_d[i] = {"0000":0}
+        for i in range(17):
+            tuple_l[i] = {"0000": 0}
+            tuple_r[i] = {"0000": 0}
+            tuple_u[i] = {"0000": 0}
+            tuple_d[i] = {"0000": 0}
 
         self.v_actions = [tuple_l, tuple_r, tuple_u, tuple_d]
 
@@ -83,7 +83,7 @@ class game2048():
         self.screen = pygame.display.set_mode((400, 500))
         pygame.display.set_caption("2048 Game")
 
-    #Ajoute des nouvelles tuiles
+    # Ajoute des nouvelles tuiles
     def add_new_tile(self):
         empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
         if empty_cells:
@@ -107,15 +107,22 @@ class game2048():
 
     def evaluate(self, action):
         reward = 0
-        if(action == "LEFT"): act = 0
-        if(action == "RIGHT"): act = 1
-        if(action == "UP"): act = 2
-        if(action == "DOWN"): act = 3
+        if action == "LEFT": act = 0
+        if action == "RIGHT": act = 1
+        if action == "UP": act = 2
+        if action == "DOWN": act = 3
         a = self.v_actions[act]
         for i in range(17):
             if self.read_tuple(i) in a:
                 reward += a[i][self.read_tuple(i)]
         return reward
+
+    def best_tile(self):
+        max_tile = self.grid[0][0]
+        for i in range(4):
+            for j in range(4):
+                if self.grid[i][j] > max_tile: max_tile = self.grid[i][j]
+        return max_tile
 
     # grid, action, reward, grid_afterstate, grid_addtile
     # def learn_evaluation(self, action, reward):
@@ -237,22 +244,26 @@ class game2048():
         pygame.display.update()
 
     def run(self):
-        if os.path.isfile('tuples2048') :
+        if os.path.isfile('tuples2048'):
             with open('tuples2048', 'rb') as file:
                 print("Lecture du fichier des tuples")
-                pickle.load(file, self.v_actions)
-        else : print("Erreur : Le fichier n'existe pas")
+                self.v_actions = pickle.load(file)
+        else: print("Erreur : Le fichier n'existe pas")
         self.draw()
         while not self.is_game_over():
             # doit évaluer les 4 moves pour prendre le meilleur dans action
-            moveL = self.evaluate("LEFT")
-            moveR = self.evaluate("RIGHT")
-            moveU = self.evaluate("UP")
-            moveD = self.evaluate("DOWN")
-            if (max(moveL, moveR, moveU, moveD) == moveL): act = "LEFT"
-            if (max(moveL, moveR, moveU, moveD) == moveR): act = "RIGHT"
-            if (max(moveL, moveR, moveU, moveD) == moveU): act = "UP"
-            if (max(moveL, moveR, moveU, moveD) == moveD): act = "DOWN"
+            move_l = self.evaluate("LEFT")
+            move_r = self.evaluate("RIGHT")
+            move_u = self.evaluate("UP")
+            move_d = self.evaluate("DOWN")
+            if random.random() >= 0.8:
+                act = random.choice(["LEFT", "UP", "RIGHT", "DOWN"])
+            else:
+                # on prend la meilleure action 90% du temps et le reste du temps on prend une action aléatoire
+                if max(move_l, move_r, move_u, move_d) == move_l: act = "LEFT"
+                if max(move_l, move_r, move_u, move_d) == move_r: act = "RIGHT"
+                if max(move_l, move_r, move_u, move_d) == move_u: act = "UP"
+                if max(move_l, move_r, move_u, move_d) == move_d: act = "DOWN"
             self.score += self.make_move(act)
             self.afterstate = self.grid
             self.nbMove = self.nbMove + 1
@@ -265,20 +276,21 @@ class game2048():
 
         print("---------------")
         print("GAME OVER")
-        print("Meilleure tuile : ", self.best_tile())
         print("Score : ", self.score)
         print("NbMove ", self.nbMove)
+        print("Best tile :", self.best_tile())
         print("---------------\n")
         with open('tuples2048', 'wb') as file:
-            print("Création du fichier des tuples")
+            print("Mise à jour du fichier des tuples")
             pickle.dump(self.v_actions, file)
         pygame.quit()
         quit()
 
+
 game = game2048()
 game.run()
 
-#==============================PSEUDO CODE ==============================#
+# ==============================PSEUDO CODE ==============================#
 # def playGame() :
 #     score = 0
 #     s = INITIALIZE GAME STATE
