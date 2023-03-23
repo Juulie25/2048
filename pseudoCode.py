@@ -90,22 +90,6 @@ class game2048():
             i, j = random.choice(empty_cells)
             self.grid[i][j] = 2 if random.random() < 0.9 else 4
 
-    #Trouve la meilleure tuile
-    def best_tile(self):
-        maxTile = self.grid[0][0]
-        for i in range(4):
-            for j in range(4):
-                if self.grid[i][j] > maxTile: maxTile = self.grid[i][j]
-        return maxTile
-
-    # Copie proprement les grilles
-    def grid_copy(grid):
-        res = [[0 for _ in range(4)] for _ in range(4)]
-        for i in range(0,4):
-            for j in range(0,4):
-                res[i][j] = grid[i][j]
-        return res
-
     def is_game_over(self):
         empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
         if empty_cells: return False
@@ -198,14 +182,6 @@ class game2048():
                 self.grid[i][j] = col[i]
         return score
 
-    def espace_libere(grid):
-        espace_libre = 0
-        for x in len(grid):
-            for y in len(grid[0]):
-                if grid[x,y] == 0:
-                    espace_libre = espace_libre+1
-        return espace_libre
-
     def make_move(self, action):
         if action == "LEFT":
             return self.move_tiles_left()
@@ -267,48 +243,37 @@ class game2048():
                 pickle.load(file, self.v_actions)
         else : print("Erreur : Le fichier n'existe pas")
         self.draw()
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    with open('tuples2048', 'wb') as file:
-                        print("Création du fichier des tuples")
-                        pickle.dump(self.v_actions, file)
-                    pygame.quit()
-                    quit()
-
-                if self.is_game_over():
-                    print("---------------")
-                    print("GAME OVER")
-                    print("Meilleure tuile : ", self.best_tile())
-                    print("Score : ", self.score)
-                    print("NbMove ", self.nbMove)
-                    print("---------------\n")
-                    with open('tuples2048', 'wb') as file:
-                        print("Création du fichier des tuples")
-                        pickle.dump(self.v_actions, file)
-                    pygame.quit()
-                    quit()
-
-                else :
-                    # doit évaluer les 4 moves pour prendre le meilleur dans action
-                    moveL = self.evaluate("LEFT")
-                    moveR = self.evaluate("RIGHT")
-                    moveU = self.evaluate("UP")
-                    moveD = self.evaluate("DOWN")
-                    if (max(moveL, moveR, moveU, moveD) == moveL): act = "LEFT"
-                    if (max(moveL, moveR, moveU, moveD) == moveR): act = "RIGHT"
-                    if (max(moveL, moveR, moveU, moveD) == moveU): act = "UP"
-                    if (max(moveL, moveR, moveU, moveD) == moveD): act = "DOWN"
-                    self.score += self.make_move(act)
-                    self.afterstate = self.grid
-                    self.nbMove = self.nbMove + 1
-                    self.add_new_tile()
-                    self.addtile = self.grid
-                    self.draw()
-                    # if self.learn:
-                    #     learn_evaluation(self, action, reward)
-
+        while not self.is_game_over():
+            # doit évaluer les 4 moves pour prendre le meilleur dans action
+            moveL = self.evaluate("LEFT")
+            moveR = self.evaluate("RIGHT")
+            moveU = self.evaluate("UP")
+            moveD = self.evaluate("DOWN")
+            if (max(moveL, moveR, moveU, moveD) == moveL): act = "LEFT"
+            if (max(moveL, moveR, moveU, moveD) == moveR): act = "RIGHT"
+            if (max(moveL, moveR, moveU, moveD) == moveU): act = "UP"
+            if (max(moveL, moveR, moveU, moveD) == moveD): act = "DOWN"
+            self.score += self.make_move(act)
+            self.afterstate = self.grid
+            self.nbMove = self.nbMove + 1
+            self.add_new_tile()
+            self.addtile = self.grid
+            self.draw()
+            # if self.learn:
+            #     learn_evaluation(self, action, reward)
             pygame.time.wait(50)
+
+        print("---------------")
+        print("GAME OVER")
+        print("Meilleure tuile : ", self.best_tile())
+        print("Score : ", self.score)
+        print("NbMove ", self.nbMove)
+        print("---------------\n")
+        with open('tuples2048', 'wb') as file:
+            print("Création du fichier des tuples")
+            pickle.dump(self.v_actions, file)
+        pygame.quit()
+        quit()
 
 game = game2048()
 game.run()
