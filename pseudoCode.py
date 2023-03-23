@@ -64,7 +64,7 @@ class game2048:
         self.nbMove = 0
         self.add_new_tile()
         self.add_new_tile()
-        # self.learn = True
+        self.learn = True
 
         tuple_l = [0] * 17
         tuple_r = [0] * 17
@@ -123,6 +123,17 @@ class game2048:
                 res[i][j] = self.grid[i][j]
         return res
 
+    def best_tile(self):
+        """
+
+        :return:
+        """
+        max_tile = self.grid[0][0]
+        for i in range(4):
+            for j in range(4):
+                if self.grid[i][j] > max_tile: max_tile = self.grid[i][j]
+        return max_tile
+
     def evaluate(self, action):
         """
 
@@ -140,27 +151,24 @@ class game2048:
                 reward += a[i][self.read_tuple(i)]
         return reward
 
-    def best_tile(self):
-        """
-
-        :return:
-        """
-        max_tile = self.grid[0][0]
-        for i in range(4):
-            for j in range(4):
-                if self.grid[i][j] > max_tile: max_tile = self.grid[i][j]
-        return max_tile
-
     # grid, action, reward, grid_afterstate, grid_addtile
-    # def learn_evaluation(self, action, reward):
-        # i = 1
-        # a partir de S'' on regarde les 4 actions et on prend la meilleure valeur => dans les tables,
-        # calculer les coordonnées pour tous les n-tuples et faire la somme des 3 tuples et on la renvoie
-        # puis récupérer le max entre les 4 valeurs
-        # vnext = maxa0∈A(s00) Va0 (s00)
-        # vnext = "oui"
-        # Va(s) = Va(s) + α(r + vnext − Va(s))
-        # self.v_actions[action] = self.v_actions[action] + alpha*(reward + vnext-self.v_actions[action])
+    def learn_evaluation(self, action, reward):
+        alpha = 0.0050                              #D'après l'étude du document...
+
+        move_l = self.evaluate("LEFT")
+        move_r = self.evaluate("RIGHT")
+        move_u = self.evaluate("UP")
+        move_d = self.evaluate("DOWN")
+        resNext = max(move_l,move_r,move_u,move_d)
+
+        if action == "LEFT": act = 0
+        if action == "RIGHT": act = 1
+        if action == "UP": act = 2
+        if action == "DOWN": act = 3
+        a = self.v_actions[act]
+        for i in range(17):
+            a[i][self.initial.read_tuple(i)] = a[i][self.initial.read_tuple(i)] + alpha * (reward + resNext - a[i][self.initial.read_tuple(i)])
+
 
     def move_tiles_left(self):
         """
@@ -313,6 +321,7 @@ class game2048:
         self.draw()
         while not self.is_game_over():
             # doit évaluer les 4 moves pour prendre le meilleur dans action
+            self.initial = self.grid_copy()
             move_l = self.evaluate("LEFT")
             move_r = self.evaluate("RIGHT")
             move_u = self.evaluate("UP")
@@ -325,13 +334,14 @@ class game2048:
                 if max(move_l, move_r, move_u, move_d) == move_r: act = "RIGHT"
                 if max(move_l, move_r, move_u, move_d) == move_u: act = "UP"
                 if max(move_l, move_r, move_u, move_d) == move_d: act = "DOWN"
-            self.score += self.make_move(act)
+            reward = self.make_move(act)
+            self.score += reward
             self.afterstate = self.grid_copy()
             self.nbMove = self.nbMove + 1
             self.add_new_tile()
             self.draw()
-            # if self.learn:
-            #     learn_evaluation(self, action, reward)
+            if self.learn:
+                self.learn_evaluation(act, reward)
             pygame.time.wait(50)
 
         print("---------------")
