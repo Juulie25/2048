@@ -16,6 +16,7 @@ import pygame
 import pickle
 import math
 import random
+import os
 
 
 class game2048():
@@ -77,6 +78,12 @@ class game2048():
 
         self.v_actions = [tuple_l, tuple_r, tuple_u, tuple_d]
 
+        if os.path.isfile('tuples2048') :
+            with open('tuples2048', 'rb') as file:
+                print("Lecture du fichier des tuples")
+                pickle.load(file, self.v_actions)
+        else : print("Erreur : Le fichier n'existe pas")
+
         pygame.init()
         self.font = pygame.font.SysFont("Arial", 36)
         self.screen = pygame.display.set_mode((400, 500))
@@ -101,7 +108,7 @@ class game2048():
         #     learn_evaluation(self, action, reward)
 
         with open('tuples2048', 'wb') as file:
-            print("creation fichier")
+            print("Création du fichier des tuples")
             pickle.dump(self.v_actions, file)
 
     #Ajoute des nouvelles tuiles
