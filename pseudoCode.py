@@ -147,10 +147,11 @@ class game2048:
         if action == "DOWN": act = 3
         a = self.v_actions[act]
         for i in range(17):
-            if self.read_tuple(i) in a:
-                reward += a[i][self.read_tuple(i)]
+            if self.read_tuple(self.grid, i) in a:
+                reward += a[i][self.read_tuple(self.grid, i)]
         return reward
 
+    # TODO : trouver une solution pour la lecture du contenu des tables de tuples pour la grille souhaitée
     # grid, action, reward, grid_afterstate, grid_addtile
     def learn_evaluation(self, action, reward):
         alpha = 0.0050                              #D'après l'étude du document...
@@ -167,7 +168,7 @@ class game2048:
         if action == "DOWN": act = 3
         a = self.v_actions[act]
         for i in range(17):
-            a[i][self.initial.read_tuple(i)] = a[i][self.initial.read_tuple(i)] + alpha * (reward + resNext - a[i][self.initial.read_tuple(i)])
+            a[i][self.read_tuple(self.initial, i)] = a[i][self.read_tuple(self.initial, i)] + alpha * (reward + resNext - a[i][self.read_tuple(self.initial, i)])
 
 
     def move_tiles_left(self):
@@ -256,32 +257,32 @@ class game2048:
             return self.move_tiles_down()
 
     # renvoie la valeur de la ligne
-    def read_tuple(self, i):
+    def read_tuple(self, grille, i):
         """
 
         :param i:
         :return:
         """
         if i < 4:
-            res0 = math.log2(self.grid[i][0]) if self.grid[i][0] > 0 else 0
-            res1 = math.log2(self.grid[i][1]) if self.grid[i][1] > 0 else 0
-            res2 = math.log2(self.grid[i][2]) if self.grid[i][2] > 0 else 0
-            res3 = math.log2(self.grid[i][3]) if self.grid[i][3] > 0 else 0
+            res0 = math.log2(grille[i][0]) if grille[i][0] > 0 else 0
+            res1 = math.log2(grille[i][1]) if grille[i][1] > 0 else 0
+            res2 = math.log2(grille[i][2]) if grille[i][2] > 0 else 0
+            res3 = math.log2(grille[i][3]) if grille[i][3] > 0 else 0
             return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
         if 4 <= i < 8:
-            res0 = math.log2(self.grid[0][i % 4]) if self.grid[0][i % 4] > 0 else 0
-            res1 = math.log2(self.grid[1][i % 4]) if self.grid[1][i % 4] > 0 else 0
-            res2 = math.log2(self.grid[2][i % 4]) if self.grid[2][i % 4] > 0 else 0
-            res3 = math.log2(self.grid[3][i % 4]) if self.grid[3][i % 4] > 0 else 0
+            res0 = math.log2(grille[0][i % 4]) if grille[0][i % 4] > 0 else 0
+            res1 = math.log2(grille[1][i % 4]) if grille[1][i % 4] > 0 else 0
+            res2 = math.log2(grille[2][i % 4]) if grille[2][i % 4] > 0 else 0
+            res3 = math.log2(grille[3][i % 4]) if grille[3][i % 4] > 0 else 0
             return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
         if i >= 8:
             if 7 < i < 11: a = 0
             if 11 <= i < 14: a = 1
             if i >= 14: a = 2
-            res0 = math.log2(self.grid[a][a]) if self.grid[a][a] > 0 else 0
-            res1 = math.log2(self.grid[a][a+1]) if self.grid[a][a+1] > 0 else 0
-            res2 = math.log2(self.grid[a+1][a]) if self.grid[a+1][a] > 0 else 0
-            res3 = math.log2(self.grid[a+1][a+1]) if self.grid[a+1][a+1] > 0 else 0
+            res0 = math.log2(grille[a][a]) if grille[a][a] > 0 else 0
+            res1 = math.log2(grille[a][a+1]) if grille[a][a+1] > 0 else 0
+            res2 = math.log2(grille[a+1][a]) if grille[a+1][a] > 0 else 0
+            res3 = math.log2(grille[a+1][a+1]) if grille[a+1][a+1] > 0 else 0
             return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
 
     def draw(self):
