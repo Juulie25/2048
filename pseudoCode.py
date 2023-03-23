@@ -78,38 +78,10 @@ class game2048():
 
         self.v_actions = [tuple_l, tuple_r, tuple_u, tuple_d]
 
-        if os.path.isfile('tuples2048') :
-            with open('tuples2048', 'rb') as file:
-                print("Lecture du fichier des tuples")
-                pickle.load(file, self.v_actions)
-        else : print("Erreur : Le fichier n'existe pas")
-
         pygame.init()
         self.font = pygame.font.SysFont("Arial", 36)
         self.screen = pygame.display.set_mode((400, 500))
         pygame.display.set_caption("2048 Game")
-
-        while not self.is_game_over():
-            #doit évaluer les 4 moves pour prendre le meilleur dans action
-            moveL = self.evaluate("LEFT")
-            moveR = self.evaluate("RIGHT")
-            moveU = self.evaluate("UP")
-            moveD = self.evaluate("DOWN")
-            if (max(moveL,moveR,moveU,moveD) == moveL): act = "LEFT"
-            if (max(moveL,moveR,moveU,moveD) == moveR): act = "RIGHT"
-            if (max(moveL,moveR,moveU,moveD) == moveU): act = "UP"
-            if (max(moveL,moveR,moveU,moveD) == moveD): act = "DOWN"
-            self.score += self.make_move(act)
-            self.afterstate = self.grid
-            self.nbMove = self.nbMove + 1
-            self.add_new_tile()
-            self.addtile = self.grid
-        # if self.learn:
-        #     learn_evaluation(self, action, reward)
-
-        with open('tuples2048', 'wb') as file:
-            print("Création du fichier des tuples")
-            pickle.dump(self.v_actions, file)
 
     #Ajoute des nouvelles tuiles
     def add_new_tile(self):
@@ -117,6 +89,14 @@ class game2048():
         if empty_cells:
             i, j = random.choice(empty_cells)
             self.grid[i][j] = 2 if random.random() < 0.9 else 4
+
+    #Trouve la meilleure tuile
+    def best_tile(self):
+        maxTile = self.grid[0][0]
+        for i in range(4):
+            for j in range(4):
+                if self.grid[i][j] > maxTile: maxTile = self.grid[i][j]
+        return maxTile
 
     # Copie proprement les grilles
     def grid_copy(grid):
@@ -281,12 +261,57 @@ class game2048():
         pygame.display.update()
 
     def run(self):
+        if os.path.isfile('tuples2048') :
+            with open('tuples2048', 'rb') as file:
+                print("Lecture du fichier des tuples")
+                pickle.load(file, self.v_actions)
+        else : print("Erreur : Le fichier n'existe pas")
         self.draw()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    with open('tuples2048', 'wb') as file:
+                        print("Création du fichier des tuples")
+                        pickle.dump(self.v_actions, file)
+                    pygame.quit()
+                    quit()
 
+                if self.is_game_over():
+                    print("---------------")
+                    print("GAME OVER")
+                    print("Meilleure tuile : ", self.best_tile())
+                    print("Score : ", self.score)
+                    print("NbMove ", self.nbMove)
+                    print("---------------\n")
+                    with open('tuples2048', 'wb') as file:
+                        print("Création du fichier des tuples")
+                        pickle.dump(self.v_actions, file)
+                    pygame.quit()
+                    quit()
+
+                else :
+                    # doit évaluer les 4 moves pour prendre le meilleur dans action
+                    moveL = self.evaluate("LEFT")
+                    moveR = self.evaluate("RIGHT")
+                    moveU = self.evaluate("UP")
+                    moveD = self.evaluate("DOWN")
+                    if (max(moveL, moveR, moveU, moveD) == moveL): act = "LEFT"
+                    if (max(moveL, moveR, moveU, moveD) == moveR): act = "RIGHT"
+                    if (max(moveL, moveR, moveU, moveD) == moveU): act = "UP"
+                    if (max(moveL, moveR, moveU, moveD) == moveD): act = "DOWN"
+                    self.score += self.make_move(act)
+                    self.afterstate = self.grid
+                    self.nbMove = self.nbMove + 1
+                    self.add_new_tile()
+                    self.addtile = self.grid
+                    self.draw()
+                    # if self.learn:
+                    #     learn_evaluation(self, action, reward)
+
+            pygame.time.wait(50)
 
 game = game2048()
 game.run()
-
 
 #==============================PSEUDO CODE ==============================#
 # def playGame() :
