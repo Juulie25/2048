@@ -85,8 +85,8 @@ class game2048:
 
     def add_new_tile(self):
         """
-        Ajout d'une nouvelle tuile sur la grille
-        :return: la grille avec une nouvelle tuile en plus
+        Ajout d'une nouvelle tuile de manière aléatoire sur la grille
+        :return: la grille avec une nouvelle tuile
         """
         empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
         if empty_cells:
@@ -95,7 +95,7 @@ class game2048:
 
     def is_game_over(self):
         """
-        Test si des mouvements sont encore réalisables sur la grille
+        Test pour savoir la partie est finie en regardant si des mouvements sont encore réalisables sur la grille
         :return: True si la partie est finie
         """
         empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
@@ -125,8 +125,8 @@ class game2048:
 
     def best_tile(self):
         """
-
-        :return:
+        Récupère la tuile avec le meilleur score présent sur la grille
+        :return: la meilleure tuile sur la grille
         """
         max_tile = self.grid[0][0]
         for i in range(4):
@@ -147,20 +147,26 @@ class game2048:
         if action == "DOWN": act = 3
         a = self.v_actions[act]
         for i in range(17):
-            if self.read_tuple(self.grid, i) in a:
+            if self.read_tuple(self.grid, i) in a[i]:
                 reward += a[i][self.read_tuple(self.grid, i)]
         return reward
 
     # TODO : trouver une solution pour la lecture du contenu des tables de tuples pour la grille souhaitée
     # grid, action, reward, grid_afterstate, grid_addtile
     def learn_evaluation(self, action, reward):
-        alpha = 0.0050                              #D'après l'étude du document...
+        """
+
+        :param action:
+        :param reward:
+        :return:
+        """
+        alpha = 0.0050  # D'après l'étude du document...
 
         move_l = self.evaluate("LEFT")
         move_r = self.evaluate("RIGHT")
         move_u = self.evaluate("UP")
         move_d = self.evaluate("DOWN")
-        resNext = max(move_l,move_r,move_u,move_d)
+        res_next = max(move_l, move_r, move_u, move_d)
 
         if action == "LEFT": act = 0
         if action == "RIGHT": act = 1
@@ -168,13 +174,15 @@ class game2048:
         if action == "DOWN": act = 3
         a = self.v_actions[act]
         for i in range(17):
-            a[i][self.read_tuple(self.initial, i)] = a[i][self.read_tuple(self.initial, i)] + alpha * (reward + resNext - a[i][self.read_tuple(self.initial, i)])
-
+            if self.read_tuple(self.initial, i) in a[i]:
+                a[i][self.read_tuple(self.initial, i)] = a[i][self.read_tuple(self.initial, i)] + alpha * (reward + res_next - a[i][self.read_tuple(self.initial, i)])
+            else:
+                a[i] = {self.read_tuple(self.initial, i):a[i][self.read_tuple(self.initial, i)] + alpha * (reward + res_next - a[i][self.read_tuple(self.initial, i)])}
 
     def move_tiles_left(self):
         """
-
-        :return:
+        Bouge toutes les cases de la grille vers la gauche
+        :return: le score obtenu suite à cette action
         """
         score = 0
         for row in self.grid:
@@ -189,8 +197,8 @@ class game2048:
 
     def move_tiles_right(self):
         """
-
-        :return:
+        Bouge toutes les cases de la grille vers la droite
+        :return: le score obtenu suite à cette action
         """
         score = 0
         for row in self.grid:
@@ -205,8 +213,8 @@ class game2048:
 
     def move_tiles_up(self):
         """
-
-        :return:
+        Bouge toutes les cases de la grille vers le haut
+        :return: le score obtenu suite à cette action
         """
         score = 0
         for j in range(4):
@@ -224,8 +232,8 @@ class game2048:
 
     def move_tiles_down(self):
         """
-
-        :return:
+        Bouge toutes les cases de la grille vers le bas
+        :return: le score obtenu suite à cette action
         """
         score = 0
         for j in range(4):
@@ -243,9 +251,9 @@ class game2048:
 
     def make_move(self, action):
         """
-
-        :param action:
-        :return:
+        Déplacement des tuiles de la grille en fonction de l'action choisie
+        :param action: le sens vers lequel les tuiles seront déplacées
+        :return: le score obtenu une fois l'action effectuée
         """
         if action == "LEFT":
             return self.move_tiles_left()
