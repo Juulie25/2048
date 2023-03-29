@@ -177,7 +177,7 @@ class game2048:
             if self.read_tuple(self.initial, i) in a[i]:
                 a[i][self.read_tuple(self.initial, i)] = a[i][self.read_tuple(self.initial, i)] + alpha * (reward + res_next - a[i][self.read_tuple(self.initial, i)])
             else:
-                a[i] = {self.read_tuple(self.initial, i):a[i][self.read_tuple(self.initial, i)] + alpha * (reward + res_next - a[i][self.read_tuple(self.initial, i)])}
+                a[i][self.read_tuple(self.initial, i)] = 0
 
     def move_tiles_left(self):
         """
