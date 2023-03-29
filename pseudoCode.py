@@ -331,6 +331,7 @@ class game2048:
         while not self.is_game_over():
             # doit évaluer les 4 moves pour prendre le meilleur dans action
             self.initial = self.grid_copy()
+            test = self.grid_copy()
             move_l = self.evaluate("LEFT")
             move_r = self.evaluate("RIGHT")
             move_u = self.evaluate("UP")
@@ -346,9 +347,10 @@ class game2048:
             reward = self.make_move(act)
             self.score += reward
             self.afterstate = self.grid_copy()
-            self.nbMove = self.nbMove + 1
-            self.add_new_tile()
-            self.draw()
+            if self.grid != test:
+                self.nbMove = self.nbMove + 1
+                self.add_new_tile()
+                self.draw()
             if self.learn:
                 self.learn_evaluation(act, reward)
             pygame.time.wait(50)
