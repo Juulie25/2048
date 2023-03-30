@@ -2,13 +2,14 @@ import pickle
 import math
 import random
 import os
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"           #Ca permet d'éviter le msg de bienvenue
+
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"  # Ca permet d'éviter le msg de bienvenue
 import pygame
 
 class game2048:
     def __init__(self):
 
-        #Grille complète
+        # Grille complète
         self.grid = [
             [0, 0, 0, 0],
             [0, 0, 0, 0],
@@ -16,7 +17,7 @@ class game2048:
             [0, 0, 0, 0],
         ]
 
-        #Choix des couleurs
+        # Choix des couleurs
         self.tilesColor = {
             0: "#BFB3A5",
             2: "#FAE7E0",
@@ -38,7 +39,7 @@ class game2048:
             131072: "#007FC2"
         }
 
-        #Les 4 actions possible
+        # Les 4 actions possible
         self.actions = {
             "LEFT",
             "RIGHT",
@@ -46,17 +47,17 @@ class game2048:
             "DOWN"
         }
 
-        #Initialisation des différents paramètres du jeux
+        # Initialisation des différents paramètres du jeux
         self.initial = self.grid_copy()
         self.score = 0
         self.nbMove = 0
         self.add_new_tile()
         self.add_new_tile()
 
-        #Active l'apprentissage
+        # Active l'apprentissage
         self.learn = True
 
-        #Initialisation des différents tableaux et dicos contenant les poids
+        # Initialisation des différents tableaux et dicos contenant les poids
         tuple_l = [0] * 17
         tuple_r = [0] * 17
         tuple_u = [0] * 17
@@ -69,13 +70,13 @@ class game2048:
 
         self.v_actions = [tuple_l, tuple_r, tuple_u, tuple_d]
 
-        #Initialisation du jeux avec pygame
+        # Initialisation du jeux avec pygame
         pygame.init()
-        #self.font = pygame.font.SysFont("Arial", 36)
-        #self.screen = pygame.display.set_mode((400, 500))
-        #pygame.display.set_caption("2048 Game")
+        # self.font = pygame.font.SysFont("Arial", 36)
+        # self.screen = pygame.display.set_mode((400, 500))
+        # pygame.display.set_caption("2048 Game")
 
-    #Ajout de nouvelles tuiles
+    # Ajout de nouvelles tuiles
     def add_new_tile(self):
         """
         Ajout d'une nouvelle tuile de manière aléatoire sur la grille
@@ -86,7 +87,7 @@ class game2048:
             i, j = random.choice(empty_cells)
             self.grid[i][j] = 2 if random.random() < 0.9 else 4
 
-    #Vérifie si la game est fini
+    # Vérifie si la game est fini
     def is_game_over(self):
         """
         Test pour savoir la partie est finie en regardant si des mouvements sont encore réalisables sur la grille
@@ -106,7 +107,7 @@ class game2048:
                 return False
         return True
 
-    #Copie proprement la grille
+    # Copie proprement la grille
     def grid_copy(self):
         """
         Effectue une copie profonde de la grille actuelle
@@ -118,7 +119,7 @@ class game2048:
                 res[i][j] = self.grid[i][j]
         return res
 
-    #Définit la meilleure tuile de la grille
+    # Définit la meilleure tuile de la grille
     def best_tile(self):
         """
         Récupère la tuile avec le meilleur score présent sur la grille
@@ -130,7 +131,7 @@ class game2048:
                 if self.grid[i][j] > max_tile: max_tile = self.grid[i][j]
         return max_tile
 
-    #Renvoi une valeur pour évaluer une grille en fonction des poids
+    # Renvoi une valeur pour évaluer une grille en fonction des poids
     def evaluate(self, action):
         """
         :param action:
@@ -147,7 +148,7 @@ class game2048:
                 res += a[i][self.read_tuple(self.grid, i)]
         return res
 
-    #Apprend tout au long de la partie en modifiant les poids
+    # Apprend tout au long de la partie en modifiant les poids
     def learn_evaluation(self, action, reward):
         """
         :param action:
@@ -166,17 +167,17 @@ class game2048:
         for i in range(17):
             if self.read_tuple(self.initial, i) in a[i]:
                 res_next = 0
-                #J'AI FAIT UN CHANGEMENT ICI, AVANT RES_NEXT CONTENAIT LA SOMME DES VALEURS DES 17 TUPLE (CE QUI FAISAIT BEAUCOUP)
-                #MAINTENANT RES_NEXT CONTIENT LA MEILLEURE VALEURE PARMIS LES 4 TABLES/ACTIONS POUR CHAQUE TUPLE
+                # J'AI FAIT UN CHANGEMENT ICI, AVANT RES_NEXT CONTENAIT LA SOMME DES VALEURS DES 17 TUPLE (CE QUI FAISAIT BEAUCOUP)
+                # MAINTENANT RES_NEXT CONTIENT LA MEILLEURE VALEURE PARMIS LES 4 TABLES/ACTIONS POUR CHAQUE TUPLE
                 for c in range(4):
                     res = a[c][self.read_tuple(self.initial, i)] if self.read_tuple(self.initial, i) in a[c] else 0
-                    if res > res_next : res_next = res
-                a[i][self.read_tuple(self.initial, i)] = a[i][self.read_tuple(self.initial, i)] + alpha * (rew + res_next - a[i][self.read_tuple(self.initial, i)])
+                    if res > res_next: res_next = res
+                a[i][self.read_tuple(self.initial, i)] = a[i][self.read_tuple(self.initial, i)] + alpha * (
+                        rew + res_next - a[i][self.read_tuple(self.initial, i)])
             else:
                 a[i][self.read_tuple(self.initial, i)] = 0
-            print(a[i][self.read_tuple(self.initial, i)])
 
-    #Bouge les tuiles "bougeable" sur la gauche et renvoi un score
+    # Bouge les tuiles "bougeable" sur la gauche et renvoi un score
     def move_tiles_left(self):
         """
         Bouge toutes les cases de la grille vers la gauche
@@ -193,7 +194,7 @@ class game2048:
             row.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
         return score
 
-    #Bouge les tuiles "bougeable" sur la droite et renvoi un score
+    # Bouge les tuiles "bougeable" sur la droite et renvoi un score
     def move_tiles_right(self):
         """
         Bouge toutes les cases de la grille vers la droite
@@ -210,7 +211,7 @@ class game2048:
             row.sort(key=lambda x: 0 if x == 0 else 1)
         return score
 
-    #Bouge les tuiles "bougeable" vers le haut et renvoi un score
+    # Bouge les tuiles "bougeable" vers le haut et renvoi un score
     def move_tiles_up(self):
         """
         Bouge toutes les cases de la grille vers le haut
@@ -230,7 +231,7 @@ class game2048:
                 self.grid[i][j] = col[i]
         return score
 
-    #Bouge les tuiles "bougeable" vers le bas et renvoi un score
+    # Bouge les tuiles "bougeable" vers le bas et renvoi un score
     def move_tiles_down(self):
         """
         Bouge toutes les cases de la grille vers le bas
@@ -250,7 +251,7 @@ class game2048:
                 self.grid[i][j] = col[i]
         return score
 
-    #Renvoi vers les fonctions de mouvement avec l'action choisi
+    # Renvoi vers les fonctions de mouvement avec l'action choisi
     def make_move(self, action):
         """
         Déplacement des tuiles de la grille en fonction de l'action choisie
@@ -266,7 +267,7 @@ class game2048:
         if action == "DOWN":
             return self.move_tiles_down()
 
-    #Renvoie le poid inscrit dans les tableaux du tuple choisi
+    # Renvoie le poid inscrit dans les tableaux du tuple choisi
     def read_tuple(self, grille, i):
         """
         :param i:
@@ -289,12 +290,12 @@ class game2048:
             if 11 <= i < 14: a = 1
             if i >= 14: a = 2
             res0 = math.log2(grille[a][a]) if grille[a][a] > 0 else 0
-            res1 = math.log2(grille[a][a+1]) if grille[a][a+1] > 0 else 0
-            res2 = math.log2(grille[a+1][a]) if grille[a+1][a] > 0 else 0
-            res3 = math.log2(grille[a+1][a+1]) if grille[a+1][a+1] > 0 else 0
+            res1 = math.log2(grille[a][a + 1]) if grille[a][a + 1] > 0 else 0
+            res2 = math.log2(grille[a + 1][a]) if grille[a + 1][a] > 0 else 0
+            res3 = math.log2(grille[a + 1][a + 1]) if grille[a + 1][a + 1] > 0 else 0
             return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
 
-    #Dessine la fenêtre de jeu
+    # Dessine la fenêtre de jeu
     def draw(self):
         """
         :return:
@@ -318,17 +319,18 @@ class game2048:
                     self.screen.blit(text, text_rect)
         pygame.display.update()
 
-    #Gère le déroulement du jeu
+    # Gère le déroulement du jeu
     def run(self):
         """
         :return:
         """
         if os.path.isfile('tuples2048'):
             with open('tuples2048', 'rb') as file:
-                #print("Lecture du fichier des tuples")
+                # print("Lecture du fichier des tuples")
                 self.v_actions = pickle.load(file)
-        else: print("Erreur : Le fichier n'existe pas")
-        #self.draw()
+        else:
+            print("Erreur : Le fichier n'existe pas")
+        # self.draw()
         while not self.is_game_over():
             # doit évaluer les 4 moves pour prendre le meilleur dans action
             self.initial = self.grid_copy()
@@ -346,15 +348,16 @@ class game2048:
                 if max(move_l, move_r, move_u, move_d) == move_r: act = "RIGHT"
                 if max(move_l, move_r, move_u, move_d) == move_u: act = "UP"
                 if max(move_l, move_r, move_u, move_d) == move_d: act = "DOWN"
+
             reward = self.make_move(act)
             self.score += reward
             if self.grid != test:
                 self.nbMove = self.nbMove + 1
                 self.add_new_tile()
-                #self.draw()
+                # self.draw()
             if self.learn:
                 self.learn_evaluation(act, reward)
-            #pygame.time.wait(50)
+            # pygame.time.wait(50)
 
         print("---------------")
         print("GAME OVER")
@@ -362,17 +365,19 @@ class game2048:
         print("NbMove ", self.nbMove)
         print("Best tile :", self.best_tile())
         print("---------------\n")
+
         with open('tuples2048', 'wb') as file:
-            #print("Mise à jour du fichier des tuples")
+            # print("Mise à jour du fichier des tuples")
             pickle.dump(self.v_actions, file)
         pygame.quit()
         quit()
 
-#On définit quelle classe est un jeu et on le lance avec pygame
+
+# On définit quelle classe est un jeu et on le lance avec pygame
 game = game2048()
 game.run()
 
-#==============================AUTRES IDEES POUR LA SUITE==============================#
+# ==============================AUTRES IDEES POUR LA SUITE==============================#
 
 # #The state evaluation function and TD(0) ->  Evaluating states
 # #évaluer les états dans lesquels ils aboutissent avec la fonction de valeur d'état V (s)
