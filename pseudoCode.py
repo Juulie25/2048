@@ -1,28 +1,14 @@
-# Définition des variables
-# s → configuration actuelle du plateau (temps t)
-# s == grid
-
-# s0 → configuration du plateau a t+1, lorsque l'action de déplacement a été faite = AFTER STATE
-# s00 → configuration du plateau a t+2, une nouvelle tuile est ajoutée
-# r → reward : score
-# a → action réalisée (G/D/H/B)
-# P(x) → fonction de transition
-# R(x) → fonction de reward
-
-# map avec état action en clé et la valeur en valeur
-# fichier à enregister sur une représentation binaire (serialisation) et à lire a chaque nouvelle partie
-
-import pygame
 import pickle
 import math
 import random
 import os
-
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"           #Ca permet d'éviter le msg de bienvenue
+import pygame
 
 class game2048:
     def __init__(self):
 
-        # grille complète
+        #Grille complète
         self.grid = [
             [0, 0, 0, 0],
             [0, 0, 0, 0],
@@ -30,6 +16,7 @@ class game2048:
             [0, 0, 0, 0],
         ]
 
+        #Choix des couleurs
         self.tilesColor = {
             0: "#BFB3A5",
             2: "#FAE7E0",
@@ -51,6 +38,7 @@ class game2048:
             131072: "#007FC2"
         }
 
+        #Les 4 actions possible
         self.actions = {
             "LEFT",
             "RIGHT",
@@ -58,14 +46,17 @@ class game2048:
             "DOWN"
         }
 
-        self.afterstate = self.grid_copy()
+        #Initialisation des différents paramètres du jeux
         self.initial = self.grid_copy()
         self.score = 0
         self.nbMove = 0
         self.add_new_tile()
         self.add_new_tile()
+
+        #Active l'apprentissage
         self.learn = True
 
+        #Initialisation des différents tableaux et dicos contenant les poids
         tuple_l = [0] * 17
         tuple_r = [0] * 17
         tuple_u = [0] * 17
@@ -78,11 +69,13 @@ class game2048:
 
         self.v_actions = [tuple_l, tuple_r, tuple_u, tuple_d]
 
+        #Initialisation du jeux avec pygame
         pygame.init()
-        self.font = pygame.font.SysFont("Arial", 36)
-        self.screen = pygame.display.set_mode((400, 500))
-        pygame.display.set_caption("2048 Game")
+        #self.font = pygame.font.SysFont("Arial", 36)
+        #self.screen = pygame.display.set_mode((400, 500))
+        #pygame.display.set_caption("2048 Game")
 
+    #Ajout de nouvelles tuiles
     def add_new_tile(self):
         """
         Ajout d'une nouvelle tuile de manière aléatoire sur la grille
@@ -93,6 +86,7 @@ class game2048:
             i, j = random.choice(empty_cells)
             self.grid[i][j] = 2 if random.random() < 0.9 else 4
 
+    #Vérifie si la game est fini
     def is_game_over(self):
         """
         Test pour savoir la partie est finie en regardant si des mouvements sont encore réalisables sur la grille
@@ -112,6 +106,7 @@ class game2048:
                 return False
         return True
 
+    #Copie proprement la grille
     def grid_copy(self):
         """
         Effectue une copie profonde de la grille actuelle
@@ -123,6 +118,7 @@ class game2048:
                 res[i][j] = self.grid[i][j]
         return res
 
+    #Définit la meilleure tuile de la grille
     def best_tile(self):
         """
         Récupère la tuile avec le meilleur score présent sur la grille
@@ -134,13 +130,13 @@ class game2048:
                 if self.grid[i][j] > max_tile: max_tile = self.grid[i][j]
         return max_tile
 
+    #Renvoi une valeur pour évaluer une grille en fonction des poids
     def evaluate(self, action):
         """
-
         :param action:
         :return:
         """
-        reward = 0
+        res = 0
         if action == "LEFT": act = 0
         if action == "RIGHT": act = 1
         if action == "UP": act = 2
@@ -148,25 +144,19 @@ class game2048:
         a = self.v_actions[act]
         for i in range(17):
             if self.read_tuple(self.grid, i) in a[i]:
-                reward += a[i][self.read_tuple(self.grid, i)]
-        return reward
+                res += a[i][self.read_tuple(self.grid, i)]
+        return res
 
-    # TODO : trouver une solution pour la lecture du contenu des tables de tuples pour la grille souhaitée
-    # grid, action, reward, grid_afterstate, grid_addtile
+    #Apprend tout au long de la partie en modifiant les poids
     def learn_evaluation(self, action, reward):
         """
-
         :param action:
         :param reward:
         :return:
         """
+        # JE MET LE REWARD EN LOG2 POUR EVITER D'AVOIR DES TROP GRANDES VALEURS ET CASSER NOS POIDS
+        rew = math.log2(reward) if reward > 0 else 0
         alpha = 0.0050  # D'après l'étude du document...
-
-        move_l = self.evaluate("LEFT")
-        move_r = self.evaluate("RIGHT")
-        move_u = self.evaluate("UP")
-        move_d = self.evaluate("DOWN")
-        res_next = max(move_l, move_r, move_u, move_d)
 
         if action == "LEFT": act = 0
         if action == "RIGHT": act = 1
@@ -175,10 +165,18 @@ class game2048:
         a = self.v_actions[act]
         for i in range(17):
             if self.read_tuple(self.initial, i) in a[i]:
-                a[i][self.read_tuple(self.initial, i)] = a[i][self.read_tuple(self.initial, i)] + alpha * (reward + res_next - a[i][self.read_tuple(self.initial, i)])
+                res_next = 0
+                #J'AI FAIT UN CHANGEMENT ICI, AVANT RES_NEXT CONTENAIT LA SOMME DES VALEURS DES 17 TUPLE (CE QUI FAISAIT BEAUCOUP)
+                #MAINTENANT RES_NEXT CONTIENT LA MEILLEURE VALEURE PARMIS LES 4 TABLES/ACTIONS POUR CHAQUE TUPLE
+                for c in range(4):
+                    res = a[c][self.read_tuple(self.initial, i)] if self.read_tuple(self.initial, i) in a[c] else 0
+                    if res > res_next : res_next = res
+                a[i][self.read_tuple(self.initial, i)] = a[i][self.read_tuple(self.initial, i)] + alpha * (rew + res_next - a[i][self.read_tuple(self.initial, i)])
             else:
                 a[i][self.read_tuple(self.initial, i)] = 0
+            print(a[i][self.read_tuple(self.initial, i)])
 
+    #Bouge les tuiles "bougeable" sur la gauche et renvoi un score
     def move_tiles_left(self):
         """
         Bouge toutes les cases de la grille vers la gauche
@@ -195,6 +193,7 @@ class game2048:
             row.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
         return score
 
+    #Bouge les tuiles "bougeable" sur la droite et renvoi un score
     def move_tiles_right(self):
         """
         Bouge toutes les cases de la grille vers la droite
@@ -211,6 +210,7 @@ class game2048:
             row.sort(key=lambda x: 0 if x == 0 else 1)
         return score
 
+    #Bouge les tuiles "bougeable" vers le haut et renvoi un score
     def move_tiles_up(self):
         """
         Bouge toutes les cases de la grille vers le haut
@@ -230,6 +230,7 @@ class game2048:
                 self.grid[i][j] = col[i]
         return score
 
+    #Bouge les tuiles "bougeable" vers le bas et renvoi un score
     def move_tiles_down(self):
         """
         Bouge toutes les cases de la grille vers le bas
@@ -249,6 +250,7 @@ class game2048:
                 self.grid[i][j] = col[i]
         return score
 
+    #Renvoi vers les fonctions de mouvement avec l'action choisi
     def make_move(self, action):
         """
         Déplacement des tuiles de la grille en fonction de l'action choisie
@@ -264,10 +266,9 @@ class game2048:
         if action == "DOWN":
             return self.move_tiles_down()
 
-    # renvoie la valeur de la ligne
+    #Renvoie le poid inscrit dans les tableaux du tuple choisi
     def read_tuple(self, grille, i):
         """
-
         :param i:
         :return:
         """
@@ -293,9 +294,9 @@ class game2048:
             res3 = math.log2(grille[a+1][a+1]) if grille[a+1][a+1] > 0 else 0
             return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
 
+    #Dessine la fenêtre de jeu
     def draw(self):
         """
-
         :return:
         """
         self.screen.fill((255, 255, 255))
@@ -317,17 +318,17 @@ class game2048:
                     self.screen.blit(text, text_rect)
         pygame.display.update()
 
+    #Gère le déroulement du jeu
     def run(self):
         """
-        
         :return:
         """
         if os.path.isfile('tuples2048'):
             with open('tuples2048', 'rb') as file:
-                print("Lecture du fichier des tuples")
+                #print("Lecture du fichier des tuples")
                 self.v_actions = pickle.load(file)
         else: print("Erreur : Le fichier n'existe pas")
-        self.draw()
+        #self.draw()
         while not self.is_game_over():
             # doit évaluer les 4 moves pour prendre le meilleur dans action
             self.initial = self.grid_copy()
@@ -336,24 +337,24 @@ class game2048:
             move_r = self.evaluate("RIGHT")
             move_u = self.evaluate("UP")
             move_d = self.evaluate("DOWN")
+            act = ""
             if random.random() >= 0.8:
                 act = random.choice(["LEFT", "UP", "RIGHT", "DOWN"])
             else:
-                # on prend la meilleure action 90% du temps et le reste du temps on prend une action aléatoire
+                # on prend la meilleure action 80% du temps et le reste du temps on prend une action aléatoire
                 if max(move_l, move_r, move_u, move_d) == move_l: act = "LEFT"
                 if max(move_l, move_r, move_u, move_d) == move_r: act = "RIGHT"
                 if max(move_l, move_r, move_u, move_d) == move_u: act = "UP"
                 if max(move_l, move_r, move_u, move_d) == move_d: act = "DOWN"
             reward = self.make_move(act)
             self.score += reward
-            self.afterstate = self.grid_copy()
             if self.grid != test:
                 self.nbMove = self.nbMove + 1
                 self.add_new_tile()
-                self.draw()
+                #self.draw()
             if self.learn:
                 self.learn_evaluation(act, reward)
-            pygame.time.wait(50)
+            #pygame.time.wait(50)
 
         print("---------------")
         print("GAME OVER")
@@ -362,58 +363,14 @@ class game2048:
         print("Best tile :", self.best_tile())
         print("---------------\n")
         with open('tuples2048', 'wb') as file:
-            print("Mise à jour du fichier des tuples")
+            #print("Mise à jour du fichier des tuples")
             pickle.dump(self.v_actions, file)
         pygame.quit()
         quit()
 
-
+#On définit quelle classe est un jeu et on le lance avec pygame
 game = game2048()
 game.run()
-
-# ==============================PSEUDO CODE ==============================#
-# def playGame() :
-#     score = 0
-#     s = INITIALIZE GAME STATE
-#     while (not IS TERMINAL STATE(s)):
-#         a =  arg maxa0∈A(s) EVALUATE(s, a)
-#         r, s0, s00 = MAKE MOVE(s, a)
-#     if LEARNING ENABLED :
-#         LEARN EVALUATION(s, a, r, s0, s00)
-#     score = score + r
-#     s = s00
-#     return score
-
-# for a given state s ∈ S and action a ∈ A(s) returns a received reward and an observed state transition
-# def makeMove(s,a):
-#     s0, r = COMPUTE AFTERSTATE(s, a)
-#     s00 = ADD RANDOM TILE(s0)
-#     return (r, s0, s00)
-
-#Les couples de méthodes ne se basent pas sur les memes configurations de départ
-
-#EVALUATE
-# attempts to measure the utility of taking each possible action a ∈ A(s) in the current state s
-# moves are selected to maximize the value returned by this function
-#renvoie la meilleure action possible
-
-
-# LEARN EVALUATE 
-# adjusts the evaluation function on the basis of the observed experience represented by a tuple (s, a, r, s0, s00)
-
-
-#The action evaluation function and Q-LEARNING ->  Evaluating actions
-# def evaluate(s,a):
-#     return Va(s)
-#
-# def learnEvaluation(s, a, r, s0, s00):
-#     vnext = maxa0∈A(s00) Va0 (s00)
-#     Va(s) = Va(s) + α(r + vnext − Va(s))
-
-#une table par état et par action
-#Va(s) : somme des poids des n-tuples en fonction de l'action
-# 4 fois la meme structure avec chaque structure qui contient n tables pour chaque tuples
-
 
 #==============================AUTRES IDEES POUR LA SUITE==============================#
 
