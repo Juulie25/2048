@@ -102,54 +102,40 @@ class game2048:
         return max_tile
 
     # Choisit la meilleure actions a faire
-    # SUREMENT POSSIBLE A OPTIMISER
-    # IL FAUDRAIT TROUVER UN MOYEN DE REGARDER LORSQUE UN MOVE NE CHANGE RIEN => CA EVITERAI QUE LE PROG BOUCLE ET QUE LA GRILLE BLOQUE...
     def best_choice(self):
+        # On creer 4 grilles pour observer le résultat des 4 actions
         testL = self.grid_copy()
         self.move_tiles_left(testL)
-        valeurL = self.evaluate(testL)
+        valeurL = self.evaluate(testL) if testL != self.grid else 0
         testR = self.grid_copy()
         self.move_tiles_right(testR)
-        valeurR = self.evaluate(testR)
+        valeurR = self.evaluate(testR) if testR != self.grid else 0
         testU = self.grid_copy()
         self.move_tiles_up(testU)
-        valeurU = self.evaluate(testU)
+        valeurU = self.evaluate(testU) if testU != self.grid else 0
         testD = self.grid_copy()
         self.move_tiles_down(testD)
-        valeurD = self.evaluate(testD)
+        valeurD = self.evaluate(testD) if testD != self.grid else 0
 
-        # Fait un choix aléatoire tout les 10% du temps
-        if random.random() >= 0.90:
-            choix = random.choice([valeurL, valeurR, valeurU, valeurD])
+        # On tri une liste pour trouver la plus grande valeur, l'avantage c'est que cette méthode fonctionne en cas d'égalité
+        liste = [valeurL, valeurR, valeurU, valeurD]
+        liste.sort()
 
-            if choix == valeurL:
-                self.grid = testL
-                self.reward = self.scoreL
-            if choix == valeurR:
-                self.grid = testR
-                self.reward = self.scoreR
-            if choix == valeurU:
-                self.grid = testU
-                self.reward = self.scoreU
-            if choix == valeurD:
-                self.grid = testD
-                self.reward = self.scoreD
-        else:
-            # DOIT CHANGER MAX, IL NE SAIT PAS TRANCHER EN CAS D'EGALITE
-            choix = max(valeurL, valeurR, valeurU, valeurD)
+        # on prend la meilleure action 95% du temps et le reste du temps on prend une action aléatoire
+        choix = random.choice([valeurL, valeurR, valeurU, valeurD]) if random.random() >= 0.95 else liste[-1]
 
-            if choix == valeurL:
-                self.grid = testL
-                self.reward = self.scoreL
-            if choix == valeurR:
-                self.grid = testR
-                self.reward = self.scoreR
-            if choix == valeurU:
-                self.grid = testU
-                self.reward = self.scoreU
-            if choix == valeurD:
-                self.grid = testD
-                self.reward = self.scoreD
+        if choix == valeurL:
+            self.grid = testL
+            self.reward = self.scoreL
+        if choix == valeurR:
+            self.grid = testR
+            self.reward = self.scoreR
+        if choix == valeurU:
+            self.grid = testU
+            self.reward = self.scoreU
+        if choix == valeurD:
+            self.grid = testD
+            self.reward = self.scoreD
 
     # Renvoi une valeur pour évaluer une grille en fonction des poids
     def evaluate(self, grid):
