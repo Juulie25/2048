@@ -1,16 +1,17 @@
-import pickle
-import math
-import random
 import os
-
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"  # Ca permet d'éviter le msg de bienvenue
+import math
+import pickle
 import pygame
+import random
+
+# Suppression du message de bienvenu
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 
 class game2048:
     def __init__(self):
 
-        # Grille complète
+        # Grille initiale
         self.grid = [
             [0, 0, 0, 0],
             [0, 0, 0, 0],
@@ -18,7 +19,7 @@ class game2048:
             [0, 0, 0, 0],
         ]
 
-        # Choix des couleurs
+        # Liste des couleurs
         self.tilesColor = {
             0: "#BFB3A5",
             2: "#FAE7E0",
@@ -49,21 +50,23 @@ class game2048:
         # Active l'apprentissage
         self.learn = True
 
-        # Initialisation des différents tableaux et dicos contenant les poids
+        # Initialisation des différents tableaux et dictionnaires contenant les poids
         tuples = [0] * 17
         for i in range(17):
             tuples[i] = {"0000": 0}
 
         self.tuples = tuples
 
-        # Initialisation du jeux avec pygame
+        # Initialisation du jeu avec pygame
         pygame.init()
         self.font = pygame.font.SysFont("Arial", 36)
         self.screen = pygame.display.set_mode((400, 500))
         pygame.display.set_caption("2048 Game")
 
-    # Ajout de nouvelles tuiles
     def add_new_tile(self):
+        """
+        Ajout d'une nouvelle tuile sur la grille
+        """
         empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
         if empty_cells:
             i, j = random.choice(empty_cells)
@@ -71,6 +74,10 @@ class game2048:
 
     # Vérifie si la game est fini
     def is_game_over(self):
+        """
+        Vérifie si auncun mouvement ne peut être effectué et donc si la partie est finie
+        :return: True si la partie est finie, False sinon
+        """
         empty_cells = [(i, j) for i in range(4) for j in range(4) if self.grid[i][j] == 0]
         if empty_cells: return False
         for i in range(3):
@@ -85,70 +92,89 @@ class game2048:
                 return False
         return True
 
-    # Copie proprement la grille
     def grid_copy(self):
+        """
+        Effectue une copie profonde de la grille de jeu actuelle
+        :return: la copie de la grille
+        """
         res = [[0 for _ in range(4)] for _ in range(4)]
         for i in range(0, 4):
             for j in range(0, 4):
                 res[i][j] = self.grid[i][j]
         return res
 
-    # Définit la meilleure tuile de la grille
     def best_tile(self):
+        """
+        Récupère la tuile avec le score le plus élevé sur la grille
+        :return: la tuile avec le meilleur score
+        """
         max_tile = self.grid[0][0]
         for i in range(4):
             for j in range(4):
                 if self.grid[i][j] > max_tile: max_tile = self.grid[i][j]
         return max_tile
 
-    # Choisit la meilleure actions a faire
     def best_choice(self):
-        # On creer 4 grilles pour observer le résultat des 4 actions
-        testL = self.grid_copy()
-        self.move_tiles_left(testL)
-        valeurL = self.evaluate(testL) if testL != self.grid else 0
-        testR = self.grid_copy()
-        self.move_tiles_right(testR)
-        valeurR = self.evaluate(testR) if testR != self.grid else 0
-        testU = self.grid_copy()
-        self.move_tiles_up(testU)
-        valeurU = self.evaluate(testU) if testU != self.grid else 0
-        testD = self.grid_copy()
-        self.move_tiles_down(testD)
-        valeurD = self.evaluate(testD) if testD != self.grid else 0
+        """
+        Définit la meilleure action a faire en fonction de la configuation de la grille
+        """
+        # On créer 4 grilles pour observer le résultat des 4 actions
+        test_l = self.grid_copy()
+        self.move_tiles_left(test_l)
+        valeur_l = self.evaluate(test_l) if test_l != self.grid else 0
 
-        # On tri une liste pour trouver la plus grande valeur, l'avantage c'est que cette méthode fonctionne en cas d'égalité
-        liste = [valeurL, valeurR, valeurU, valeurD]
+        test_r = self.grid_copy()
+        self.move_tiles_right(test_r)
+        valeur_r = self.evaluate(test_r) if test_r != self.grid else 0
+
+        test_u = self.grid_copy()
+        self.move_tiles_up(test_u)
+        valeur_u = self.evaluate(test_u) if test_u != self.grid else 0
+
+        test_d = self.grid_copy()
+        self.move_tiles_down(test_d)
+        valeur_d = self.evaluate(test_d) if test_d != self.grid else 0
+
+        # On tri une liste pour trouver la plus grande valeur
+        # L'avantage de cette méthode est qu'elle fonctionne même en cas d'égalité
+        liste = [valeur_l, valeur_r, valeur_u, valeur_d]
         liste.sort()
 
         # on prend la meilleure action 95% du temps et le reste du temps on prend une action aléatoire
-        choix = random.choice([valeurL, valeurR, valeurU, valeurD]) if random.random() >= 0.95 else liste[-1]
+        choix = random.choice([valeur_l, valeur_r, valeur_u, valeur_d]) if random.random() >= 0.95 else liste[-1]
 
-        if choix == valeurL:
-            self.grid = testL
+        if choix == valeur_l:
+            self.grid = test_l
             self.reward = self.scoreL
-        if choix == valeurR:
-            self.grid = testR
+        if choix == valeur_r:
+            self.grid = test_r
             self.reward = self.scoreR
-        if choix == valeurU:
-            self.grid = testU
+        if choix == valeur_u:
+            self.grid = test_u
             self.reward = self.scoreU
-        if choix == valeurD:
-            self.grid = testD
+        if choix == valeur_d:
+            self.grid = test_d
             self.reward = self.scoreD
 
-    # Renvoi une valeur pour évaluer une grille en fonction des poids
     def evaluate(self, grid):
+        """
+        Evaluation de la grille en lui affectant une valeur en fonction de la disposition des tuiles
+        :param grid: la grille à évaluer
+        :return: le poids associé à la grille
+        """
         res = 0
         for i in range(17):
             if self.read_tuple(grid, i) in self.tuples[i]:
                 res += self.tuples[i][self.read_tuple(grid, i)]
         return res
 
-    # Apprend tout au long de la partie en modifiant les poids
     def learn_evaluation(self):
+        """
+        Mise à jour des poids des tuples tout au long de la partie
+        """
         rew = math.log2(self.reward) if self.reward > 0 else 0
-        alpha = 0.0050  # D'après l'étude du document...
+        # D'après l'étude du document
+        alpha = 0.0050
 
         for i in range(17):
             if self.read_tuple(self.initial, i) in self.tuples[i]:
@@ -156,15 +182,19 @@ class game2048:
                     res_next = self.tuples[i][self.read_tuple(self.grid, i)]
                 else:
                     res_next = 0
-                self.tuples[i][self.read_tuple(self.initial, i)] = self.tuples[i][
-                                                                       self.read_tuple(self.initial, i)] + alpha * (
-                                                                           rew + res_next - self.tuples[i][
-                                                                       self.read_tuple(self.initial, i)])
+                self.tuples[i][self.read_tuple(self.initial, i)] = \
+                    self.tuples[i][self.read_tuple(self.initial, i)] \
+                    + alpha \
+                    * (rew + res_next - self.tuples[i][self.read_tuple(self.initial, i)])
             else:
                 self.tuples[i][self.read_tuple(self.initial, i)] = 0
 
-    # Bouge les tuiles "bougeable" sur la gauche et renvoi un score
     def move_tiles_left(self, grid):
+        """
+        Déplace toutes les tuiles possibles vers la gauche de la grille
+        :param grid: la grille sur laquelle la partie se déroule
+        :return: le score obtenu après l'action
+        """
         self.scoreL = 0
         for row in grid:
             row.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
@@ -174,10 +204,14 @@ class game2048:
                     self.scoreL += row[i]
                     row[i + 1] = 0
             row.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
-        return grid
+        return self.scoreL
 
-    # Bouge les tuiles "bougeable" sur la droite et renvoi un score
     def move_tiles_right(self, grid):
+        """
+        Déplace toutes les tuiles possibles vers la droite de la grille
+        :param grid: la grille sur laquelle la partie se déroule
+        :return: le score obtenu après l'action
+        """
         self.scoreR = 0
         for row in grid:
             row.sort(key=lambda x: 0 if x == 0 else 1)
@@ -187,10 +221,14 @@ class game2048:
                     self.scoreR += row[i]
                     row[i - 1] = 0
             row.sort(key=lambda x: 0 if x == 0 else 1)
-        return grid
+        return self.scoreR
 
-    # Bouge les tuiles "bougeable" vers le haut et renvoi un score
     def move_tiles_up(self, grid):
+        """
+        Déplace toutes les tuiles possibles vers le haut de la grille
+        :param grid: la grille sur laquelle la partie se déroule
+        :return: le score obtenu après l'action
+        """
         self.scoreU = 0
         for j in range(4):
             col = [grid[i][j] for i in range(4)]
@@ -203,10 +241,14 @@ class game2048:
             col.sort(key=lambda x: 0 if x == 0 else 1, reverse=True)
             for i in range(4):
                 grid[i][j] = col[i]
-        return grid
+        return self.scoreU
 
-    # Bouge les tuiles "bougeable" vers le bas et renvoi un score
     def move_tiles_down(self, grid):
+        """
+        Déplace toutes les tuiles possibles vers le bas de la grille
+        :param grid: la grille sur laquelle la partie se déroule
+        :return: le score obtenu après l'action
+        """
         self.scoreD = 0
         for j in range(4):
             col = [grid[i][j] for i in range(4)]
@@ -219,10 +261,15 @@ class game2048:
             col.sort(key=lambda x: 0 if x == 0 else 1)
             for i in range(4):
                 grid[i][j] = col[i]
-        return grid
+        return self.scoreD
 
-    # Renvoie le poid inscrit dans les tableaux du tuple choisi
     def read_tuple(self, grille, i):
+        """
+        Recuperation du poids associé à un tuple
+        :param grille: la grille sur laquelle la partie se déroule
+        :param i: le tuple pour lequel on cherche le poids
+        :return: le poids associé au tuple d'entré
+        """
         if i < 4:
             res0 = math.log2(grille[i][0]) if grille[i][0] > 0 else 0
             res1 = math.log2(grille[i][1]) if grille[i][1] > 0 else 0
@@ -245,8 +292,10 @@ class game2048:
             res3 = math.log2(grille[a + 1][a + 1]) if grille[a + 1][a + 1] > 0 else 0
             return str(int(res0)) + str(int(res1)) + str(int(res2)) + str(int(res3))
 
-    # Dessine la fenêtre de jeu
     def draw(self):
+        """
+        Dessine la fenêtre de jeu
+        """
         self.screen.fill((255, 255, 255))
         self.font = pygame.font.SysFont("Arial", 30)
         score_text = self.font.render("Score: " + str(self.score), True, (0, 0, 0))
@@ -266,8 +315,10 @@ class game2048:
                     self.screen.blit(text, text_rect)
         pygame.display.update()
 
-    # Gère le déroulement du jeu
     def run(self):
+        """
+        Lancement de la partie
+        """
         if os.path.isfile('tuples2048'):
             with open('tuples2048', 'rb') as file:
                 print("Lecture du fichier des tuples")
@@ -303,11 +354,39 @@ class game2048:
         quit()
 
 
-# On définit quelle classe est un jeu et on le lance avec pygame
 game = game2048()
 game.run()
 
 # ==============================AUTRES IDEES POUR LA SUITE==============================#
+# def evaluate(s,a):
+#     s0, r = COMPUTE AFTERSTATE(s, a)
+#     return r + V(s0)
+
+
+def evaluate(self, grid, action):
+    value = 0
+    if action == "UP":
+        reward = self.move_tiles_up(grid)
+        for i in range(17):
+            if self.read_tuple(grid, i) in self.tuples[i]:
+                value += self.tuples[i][self.read_tuple(grid, i)]
+    elif action == "DOWN":
+        reward = self.move_tiles_down(grid)
+        for i in range(17):
+            if self.read_tuple(grid, i) in self.tuples[i]:
+                value += self.tuples[i][self.read_tuple(grid, i)]
+    elif action == "RIGHT":
+        reward = self.move_tiles_right(grid)
+        for i in range(17):
+            if self.read_tuple(grid, i) in self.tuples[i]:
+                value += self.tuples[i][self.read_tuple(grid, i)]
+    else:
+        reward = self.move_tiles_left(grid)
+        for i in range(17):
+            if self.read_tuple(grid, i) in self.tuples[i]:
+                value += self.tuples[i][self.read_tuple(grid, i)]
+    return reward + value
+
 
 # #The state evaluation function and TD(0) ->  Evaluating states
 # #évaluer les états dans lesquels ils aboutissent avec la fonction de valeur d'état V (s)
