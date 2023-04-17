@@ -48,7 +48,7 @@ class game2048:
         self.add_new_tile()
 
         # Active l'apprentissage
-        self.learn = True
+        self.learn = False
 
         # Initialisation des différents tableaux et dictionnaires contenant les poids
         tuples = [0] * 17
@@ -121,19 +121,19 @@ class game2048:
         # On créer 4 grilles pour observer le résultat des 4 actions
         test_l = self.grid_copy()
         self.move_tiles_left(test_l)
-        valeur_l = self.evaluate(test_l) if test_l != self.grid else 0
+        valeur_l = self.evaluate(test_l,"LEFT") if test_l != self.grid else 0
 
         test_r = self.grid_copy()
         self.move_tiles_right(test_r)
-        valeur_r = self.evaluate(test_r) if test_r != self.grid else 0
+        valeur_r = self.evaluate(test_r,"RIGHT") if test_r != self.grid else 0
 
         test_u = self.grid_copy()
         self.move_tiles_up(test_u)
-        valeur_u = self.evaluate(test_u) if test_u != self.grid else 0
+        valeur_u = self.evaluate(test_u,"UP") if test_u != self.grid else 0
 
         test_d = self.grid_copy()
         self.move_tiles_down(test_d)
-        valeur_d = self.evaluate(test_d) if test_d != self.grid else 0
+        valeur_d = self.evaluate(test_d,"DOWN") if test_d != self.grid else 0
 
         # On tri une liste pour trouver la plus grande valeur
         # L'avantage de cette méthode est qu'elle fonctionne même en cas d'égalité
@@ -156,17 +156,36 @@ class game2048:
             self.grid = test_d
             self.reward = self.scoreD
 
-    def evaluate(self, grid):
+    def evaluate(self, grid, action):
         """
         Evaluation de la grille en lui affectant une valeur en fonction de la disposition des tuiles
         :param grid: la grille à évaluer
         :return: le poids associé à la grille
         """
-        res = 0
-        for i in range(17):
-            if self.read_tuple(grid, i) in self.tuples[i]:
-                res += self.tuples[i][self.read_tuple(grid, i)]
-        return res
+        value = 0
+        if action == "UP":
+            reward = self.move_tiles_up(grid)
+            for i in range(17):
+                if self.read_tuple(grid, i) in self.tuples[i]:
+                    value += self.tuples[i][self.read_tuple(grid, i)]
+        elif action == "DOWN":
+            reward = self.move_tiles_down(grid)
+            for i in range(17):
+                if self.read_tuple(grid, i) in self.tuples[i]:
+                    value += self.tuples[i][self.read_tuple(grid, i)]
+        elif action == "RIGHT":
+            reward = self.move_tiles_right(grid)
+            for i in range(17):
+                if self.read_tuple(grid, i) in self.tuples[i]:
+                    value += self.tuples[i][self.read_tuple(grid, i)]
+        else:
+            reward = self.move_tiles_left(grid)
+            for i in range(17):
+                if self.read_tuple(grid, i) in self.tuples[i]:
+                    value += self.tuples[i][self.read_tuple(grid, i)]
+        return reward + value
+
+
 
     def learn_evaluation(self):
         """
@@ -319,10 +338,11 @@ class game2048:
         """
         Lancement de la partie
         """
-        if os.path.isfile('tuples2048'):
-            with open('tuples2048', 'rb') as file:
-                print("Lecture du fichier des tuples")
-                self.tuples = pickle.load(file)
+        if os.path.isfile('tuples2048_method3'):
+            with open('tuples2048_method3', 'rb') as file:
+                print("Lecture du fichier tuples2048_method3")
+                if os.stat('tuples2048_method3').st_size > 0:
+                    self.tuples = pickle.load(file)
         else:
             print("Erreur : Le fichier n'existe pas")
         self.draw()
@@ -347,8 +367,8 @@ class game2048:
         print("Best tile :", self.best_tile())
         print("---------------\n")
 
-        with open('tuples2048', 'wb') as file:
-            print("Mise à jour du fichier des tuples")
+        with open('tuples2048_method3', 'wb') as file:
+            print("Mise à jour du fichier tuples2048_method3")
             pickle.dump(self.tuples, file)
         pygame.quit()
         quit()
@@ -357,37 +377,10 @@ class game2048:
 game = game2048()
 game.run()
 
+
+
+
 # ==============================AUTRES IDEES POUR LA SUITE==============================#
-# def evaluate(s,a):
-#     s0, r = COMPUTE AFTERSTATE(s, a)
-#     return r + V(s0)
-
-
-def evaluate(self, grid, action):
-    value = 0
-    if action == "UP":
-        reward = self.move_tiles_up(grid)
-        for i in range(17):
-            if self.read_tuple(grid, i) in self.tuples[i]:
-                value += self.tuples[i][self.read_tuple(grid, i)]
-    elif action == "DOWN":
-        reward = self.move_tiles_down(grid)
-        for i in range(17):
-            if self.read_tuple(grid, i) in self.tuples[i]:
-                value += self.tuples[i][self.read_tuple(grid, i)]
-    elif action == "RIGHT":
-        reward = self.move_tiles_right(grid)
-        for i in range(17):
-            if self.read_tuple(grid, i) in self.tuples[i]:
-                value += self.tuples[i][self.read_tuple(grid, i)]
-    else:
-        reward = self.move_tiles_left(grid)
-        for i in range(17):
-            if self.read_tuple(grid, i) in self.tuples[i]:
-                value += self.tuples[i][self.read_tuple(grid, i)]
-    return reward + value
-
-
 # #The state evaluation function and TD(0) ->  Evaluating states
 # #évaluer les états dans lesquels ils aboutissent avec la fonction de valeur d'état V (s)
 # #méthode plus lente car doit évaluer tous les coups possibles à chaque fois
