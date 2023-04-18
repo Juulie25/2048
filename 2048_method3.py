@@ -206,6 +206,36 @@ class game2048:
             else:
                 self.tuples[i][self.read_tuple(self.initial, i)] = 0
 
+    # TODO : remplacer le corps de la fonction par le code suivant
+    # def learn_evaluation(self, grid):
+    #     # D'après l'étude du document
+    #     alpha = 0.0050
+    #
+    #     a_up = self.evaluate(grid, "UP")
+    #     a_down = self.evaluate(grid, "DOWN")
+    #     a_right = self.evaluate(grid, "RIGHT")
+    #     a_left = self.evaluate(grid, "LEFT")
+    #
+    #     if a_up > a_down and a_up > a_right and a_up > a_left:
+    #         next_action = "UP"
+    #     elif a_down > a_up and a_down > a_right and a_down > a_left:
+    #         next_action = "DOWN"
+    #     elif a_right > a_up and a_right > a_down and a_right > a_left:
+    #         next_action = "RIGHT"
+    #     else:
+    #         next_action = "LEFT"
+    #
+    #     if next_action == "UP":
+    #         next_reward = self.move_tiles_up(grid)
+    #     elif next_action == "DOWN":
+    #         next_reward = self.move_tiles_down(grid)
+    #     elif next_action == "RIGHT":
+    #         next_reward = self.move_tiles_right(grid)
+    #     else:
+    #         next_reward = self.move_tiles_left(grid)
+    #
+    #     # V (s0) = V (s0) + α(rnext + V (s0next) − V (s0))
+
     def move_tiles_left(self, grid):
         """
         Déplace toutes les tuiles possibles vers la gauche de la grille
@@ -400,7 +430,7 @@ game.run()
 #     anext = arg maxa0∈A(s00) EVALUATE(s00, a0)
 #     #compute the next reward and the new afterstate
 #     s0next, rnext = COMPUTE AFTERSTATE(s00, anext)
-#     V (s0) = V (s0) + α(rnext + V (s0next) − V (s0))
+#
 #
 # # n-tuple network
 # # For a given board state s, it calculates the sum of values returned by the individual n-tuples
