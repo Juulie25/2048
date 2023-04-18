@@ -48,7 +48,7 @@ class game2048:
         self.add_new_tile()
 
         # Active l'apprentissage
-        self.learn = False
+        self.learn = True
 
         # Initialisation des différents tableaux et dictionnaires contenant les poids
         tuples = [0] * 17
@@ -184,8 +184,6 @@ class game2048:
                 if self.read_tuple(grid, i) in self.tuples[i]:
                     value += self.tuples[i][self.read_tuple(grid, i)]
         return reward + value
-
-
 
     def learn_evaluation(self):
         """
@@ -376,8 +374,6 @@ class game2048:
 
 game = game2048()
 game.run()
-
-
 
 
 # ==============================AUTRES IDEES POUR LA SUITE==============================#
