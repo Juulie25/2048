@@ -43,7 +43,7 @@ class game2048:
 
         # Initialisation des différents paramètres du jeux
         self.score = 0
-        self.nbMove = 0
+        self.moveNb = 0
         self.add_new_tile()
         self.add_new_tile()
 
@@ -121,38 +121,38 @@ class game2048:
         # On créer 4 grilles pour observer le résultat des 4 actions
         test_l = self.grid_copy()
         self.move_tiles_left(test_l)
-        valeur_l = self.evaluate(test_l,"LEFT") if test_l != self.grid else 0
+        value_l = self.evaluate(test_l,"LEFT") if test_l != self.grid else 0
 
         test_r = self.grid_copy()
         self.move_tiles_right(test_r)
-        valeur_r = self.evaluate(test_r,"RIGHT") if test_r != self.grid else 0
+        value_r = self.evaluate(test_r,"RIGHT") if test_r != self.grid else 0
 
         test_u = self.grid_copy()
         self.move_tiles_up(test_u)
-        valeur_u = self.evaluate(test_u,"UP") if test_u != self.grid else 0
+        value_u = self.evaluate(test_u,"UP") if test_u != self.grid else 0
 
         test_d = self.grid_copy()
         self.move_tiles_down(test_d)
-        valeur_d = self.evaluate(test_d,"DOWN") if test_d != self.grid else 0
+        value_d = self.evaluate(test_d,"DOWN") if test_d != self.grid else 0
 
         # On tri une liste pour trouver la plus grande valeur
         # L'avantage de cette méthode est qu'elle fonctionne même en cas d'égalité
-        liste = [valeur_l, valeur_r, valeur_u, valeur_d]
-        liste.sort()
+        list = [value_l, value_r, value_u, value_d]
+        list.sort()
 
-        # on prend la meilleure action 95% du temps et le reste du temps on prend une action aléatoire
-        choix = random.choice([valeur_l, valeur_r, valeur_u, valeur_d]) if random.random() >= 0.95 else liste[-1]
+        # on prend la meilleure action 90% du temps et le reste du temps on prend une action aléatoire
+        choice = random.choice([value_l, value_r, value_u, value_d]) if random.random() >= 0.90 else list[-1]
 
-        if choix == valeur_l:
+        if choice == value_l:
             self.grid = test_l
             self.reward = self.scoreL
-        if choix == valeur_r:
+        if choice == value_r:
             self.grid = test_r
             self.reward = self.scoreR
-        if choix == valeur_u:
+        if choice == value_u:
             self.grid = test_u
             self.reward = self.scoreU
-        if choix == valeur_d:
+        if choice == value_d:
             self.grid = test_d
             self.reward = self.scoreD
 
@@ -185,56 +185,64 @@ class game2048:
                     value += self.tuples[i][self.read_tuple(grid, i)]
         return reward + value
 
+
     def learn_evaluation(self):
-        """
-        Mise à jour des poids des tuples tout au long de la partie
-        """
-        rew = math.log2(self.reward) if self.reward > 0 else 0
         # D'après l'étude du document
         alpha = 0.0050
 
-        for i in range(17):
-            if self.read_tuple(self.initial, i) in self.tuples[i]:
-                if self.read_tuple(self.grid, i) in self.tuples[i]:
-                    res_next = self.tuples[i][self.read_tuple(self.grid, i)]
-                else:
-                    res_next = 0
-                self.tuples[i][self.read_tuple(self.initial, i)] = \
-                    self.tuples[i][self.read_tuple(self.initial, i)] \
-                    + alpha \
-                    * (rew + res_next - self.tuples[i][self.read_tuple(self.initial, i)])
-            else:
-                self.tuples[i][self.read_tuple(self.initial, i)] = 0
+        next_value = 0
 
-    # TODO : remplacer le corps de la fonction par le code suivant
-    # def learn_evaluation(self, grid):
-    #     # D'après l'étude du document
-    #     alpha = 0.0050
-    #
-    #     a_up = self.evaluate(grid, "UP")
-    #     a_down = self.evaluate(grid, "DOWN")
-    #     a_right = self.evaluate(grid, "RIGHT")
-    #     a_left = self.evaluate(grid, "LEFT")
-    #
-    #     if a_up > a_down and a_up > a_right and a_up > a_left:
-    #         next_action = "UP"
-    #     elif a_down > a_up and a_down > a_right and a_down > a_left:
-    #         next_action = "DOWN"
-    #     elif a_right > a_up and a_right > a_down and a_right > a_left:
-    #         next_action = "RIGHT"
-    #     else:
-    #         next_action = "LEFT"
-    #
-    #     if next_action == "UP":
-    #         next_reward = self.move_tiles_up(grid)
-    #     elif next_action == "DOWN":
-    #         next_reward = self.move_tiles_down(grid)
-    #     elif next_action == "RIGHT":
-    #         next_reward = self.move_tiles_right(grid)
-    #     else:
-    #         next_reward = self.move_tiles_left(grid)
-    #
-    #     # V (s0) = V (s0) + α(rnext + V (s0next) − V (s0))
+        # On créer 4 grilles pour observer le résultat des 4 actions
+        test_l = self.grid_copy()
+        reward_l = self.move_tiles_left(test_l)
+        value_l = self.evaluate(test_l, "LEFT") if test_l != self.grid else 0
+
+        test_r = self.grid_copy()
+        reward_r = self.move_tiles_right(test_r)
+        value_r = self.evaluate(test_r, "RIGHT") if test_r != self.grid else 0
+
+        test_u = self.grid_copy()
+        reward_u = self.move_tiles_up(test_u)
+        value_u = self.evaluate(test_u, "UP") if test_u != self.grid else 0
+
+        test_d = self.grid_copy()
+        reward_d = self.move_tiles_down(test_d)
+        value_d = self.evaluate(test_d, "DOWN") if test_d != self.grid else 0
+
+        # On tri une liste pour trouver la plus grande valeur
+        # L'avantage de cette méthode est qu'elle fonctionne même en cas d'égalité
+        list = [value_l, value_r, value_u, value_d]
+        list.sort()
+
+        choice = list[-1]
+
+        if choice == value_l:
+            next_grid = test_l
+            next_reward = reward_l
+        if choice == value_r:
+            next_grid = test_r
+            next_reward = reward_r
+        if choice == value_u:
+            next_grid = test_u
+            next_reward = reward_u
+        if choice == value_d:
+            next_grid = test_d
+            next_reward = reward_d
+
+        rew = math.log2(next_reward) if next_reward > 0 else 0
+
+        for i in range(17):
+            if self.read_tuple(next_grid, i) in self.tuples[i]:
+                next_value += self.tuples[i][self.read_tuple(next_grid, i)]
+
+        for i in range(17):
+            if self.read_tuple(self.intermediate, i) in self.tuples[i]:
+                self.tuples[i][self.read_tuple(self.intermediate, i)] = \
+                    self.tuples[i][self.read_tuple(self.intermediate, i)] \
+                    + alpha \
+                    * (rew + next_value - self.tuples[i][self.read_tuple(self.intermediate, i)])
+            else:
+                self.tuples[i][self.read_tuple(self.intermediate, i)] = 0
 
     def move_tiles_left(self, grid):
         """
@@ -346,7 +354,7 @@ class game2048:
         self.screen.fill((255, 255, 255))
         self.font = pygame.font.SysFont("Arial", 30)
         score_text = self.font.render("Score: " + str(self.score), True, (0, 0, 0))
-        move_text = self.font.render("Move: " + str(self.nbMove), True, (0, 0, 0))
+        move_text = self.font.render("Move: " + str(self.moveNb), True, (0, 0, 0))
         self.screen.blit(score_text, (10, 10))
         self.screen.blit(move_text, (10, 45))
         pygame.draw.rect(self.screen, "#AD9C90", (0, 100, 400, 400))
@@ -379,9 +387,10 @@ class game2048:
             self.initial = self.grid_copy()
             self.reward = 0
             self.best_choice()
+            self.intermediate = self.grid_copy()
             self.score += self.reward
             if self.grid != self.initial:
-                self.nbMove = self.nbMove + 1
+                self.moveNb = self.moveNb + 1
                 self.add_new_tile()
                 self.draw()
             if self.learn:
@@ -391,7 +400,7 @@ class game2048:
         print("---------------")
         print("GAME OVER")
         print("Score : ", self.score)
-        print("NbMove ", self.nbMove)
+        print("moveNb ", self.moveNb)
         print("Best tile :", self.best_tile())
         print("---------------\n")
 
@@ -404,33 +413,3 @@ class game2048:
 
 game = game2048()
 game.run()
-
-
-# ==============================AUTRES IDEES POUR LA SUITE==============================#
-# #The state evaluation function and TD(0) ->  Evaluating states
-# #évaluer les états dans lesquels ils aboutissent avec la fonction de valeur d'état V (s)
-# #méthode plus lente car doit évaluer tous les coups possibles à chaque fois
-# def evaluate(s,a):
-#     s0, r = COMPUTE AFTERSTATE(s, a)
-#     S00 = ALL POSSIBLE NEXT STATES(s0)
-#     return r + (somme s00∈S00) P(s, a, s00)V (s00)
-#
-# def learnEvaluation(s, a, r, s0, s00):
-#     V (s) = V (s) + αlpha(r + V (s00) − V (s))
-#
-# #The afterstate evaluation function ->  Evaluating afterstates
-# # evaluate moves can be regarded as a combination of the action evaluation and the state evaluation
-# # updates the value of the recently observed afterstate
-# def evaluate(s,a):
-#     s0, r = COMPUTE AFTERSTATE(s, a)
-#     return r + V(s0)
-#
-# def learnEvaluation(s, a, r, s0, s00):
-#     #determining the next action that would be taken
-#     anext = arg maxa0∈A(s00) EVALUATE(s00, a0)
-#     #compute the next reward and the new afterstate
-#     s0next, rnext = COMPUTE AFTERSTATE(s00, anext)
-#
-#
-# # n-tuple network
-# # For a given board state s, it calculates the sum of values returned by the individual n-tuples
