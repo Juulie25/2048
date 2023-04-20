@@ -1,12 +1,11 @@
 import os
 import math
 import pickle
-import pygame
 import random
 
 # Suppression du message de bienvenu
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
-
+import pygame
 
 class game2048:
     def __init__(self):
@@ -59,9 +58,9 @@ class game2048:
 
         # Initialisation du jeu avec pygame
         pygame.init()
-        self.font = pygame.font.SysFont("Arial", 36)
-        self.screen = pygame.display.set_mode((400, 500))
-        pygame.display.set_caption("2048 Game")
+        #self.font = pygame.font.SysFont("Arial", 36)
+        #self.screen = pygame.display.set_mode((400, 500))
+        #pygame.display.set_caption("2048 Game")
 
     def add_new_tile(self):
         """
@@ -119,21 +118,21 @@ class game2048:
         Définit la meilleure action a faire en fonction de la configuation de la grille
         """
         # On créer 4 grilles pour observer le résultat des 4 actions
-        test_l = self.grid_copy()
-        self.move_tiles_left(test_l)
-        value_l = self.evaluate(test_l,"LEFT") if test_l != self.grid else 0
+        test1_l = self.grid_copy()
+        self.move_tiles_left(test1_l)
+        value_l = self.evaluate(test1_l,"LEFT") if test1_l != self.grid else 0
 
-        test_r = self.grid_copy()
-        self.move_tiles_right(test_r)
-        value_r = self.evaluate(test_r,"RIGHT") if test_r != self.grid else 0
+        test1_r = self.grid_copy()
+        self.move_tiles_right(test1_r)
+        value_r = self.evaluate(test1_r,"RIGHT") if test1_r != self.grid else 0
 
-        test_u = self.grid_copy()
-        self.move_tiles_up(test_u)
-        value_u = self.evaluate(test_u,"UP") if test_u != self.grid else 0
+        test1_u = self.grid_copy()
+        self.move_tiles_up(test1_u)
+        value_u = self.evaluate(test1_u,"UP") if test1_u != self.grid else 0
 
-        test_d = self.grid_copy()
-        self.move_tiles_down(test_d)
-        value_d = self.evaluate(test_d,"DOWN") if test_d != self.grid else 0
+        test1_d = self.grid_copy()
+        self.move_tiles_down(test1_d)
+        value_d = self.evaluate(test1_d,"DOWN") if test1_d != self.grid else 0
 
         # On tri une liste pour trouver la plus grande valeur
         # L'avantage de cette méthode est qu'elle fonctionne même en cas d'égalité
@@ -144,16 +143,16 @@ class game2048:
         choice = random.choice([value_l, value_r, value_u, value_d]) if random.random() >= 0.90 else list[-1]
 
         if choice == value_l:
-            self.grid = test_l
+            self.grid = test1_l
             self.reward = self.scoreL
         if choice == value_r:
-            self.grid = test_r
+            self.grid = test1_r
             self.reward = self.scoreR
         if choice == value_u:
-            self.grid = test_u
+            self.grid = test1_u
             self.reward = self.scoreU
         if choice == value_d:
-            self.grid = test_d
+            self.grid = test1_d
             self.reward = self.scoreD
 
     def evaluate(self, grid, action):
@@ -193,21 +192,21 @@ class game2048:
         next_value = 0
 
         # On créer 4 grilles pour observer le résultat des 4 actions
-        test_l = self.grid_copy()
-        reward_l = self.move_tiles_left(test_l)
-        value_l = self.evaluate(test_l, "LEFT") if test_l != self.grid else 0
+        test2_l = self.grid_copy()
+        reward_l = self.move_tiles_left(test2_l)
+        value_l = self.evaluate(test2_l, "LEFT") if test2_l != self.grid else 0
 
-        test_r = self.grid_copy()
-        reward_r = self.move_tiles_right(test_r)
-        value_r = self.evaluate(test_r, "RIGHT") if test_r != self.grid else 0
+        test2_r = self.grid_copy()
+        reward_r = self.move_tiles_right(test2_r)
+        value_r = self.evaluate(test2_r, "RIGHT") if test2_r != self.grid else 0
 
-        test_u = self.grid_copy()
-        reward_u = self.move_tiles_up(test_u)
-        value_u = self.evaluate(test_u, "UP") if test_u != self.grid else 0
+        test2_u = self.grid_copy()
+        reward_u = self.move_tiles_up(test2_u)
+        value_u = self.evaluate(test2_u, "UP") if test2_u != self.grid else 0
 
-        test_d = self.grid_copy()
-        reward_d = self.move_tiles_down(test_d)
-        value_d = self.evaluate(test_d, "DOWN") if test_d != self.grid else 0
+        test2_d = self.grid_copy()
+        reward_d = self.move_tiles_down(test2_d)
+        value_d = self.evaluate(test2_d, "DOWN") if test2_d != self.grid else 0
 
         # On tri une liste pour trouver la plus grande valeur
         # L'avantage de cette méthode est qu'elle fonctionne même en cas d'égalité
@@ -217,32 +216,32 @@ class game2048:
         choice = list[-1]
 
         if choice == value_l:
-            next_grid = test_l
+            next_grid = test2_l
             next_reward = reward_l
         if choice == value_r:
-            next_grid = test_r
+            next_grid = test2_r
             next_reward = reward_r
         if choice == value_u:
-            next_grid = test_u
+            next_grid = test2_u
             next_reward = reward_u
         if choice == value_d:
-            next_grid = test_d
+            next_grid = test2_d
             next_reward = reward_d
-
-        rew = math.log2(next_reward) if next_reward > 0 else 0
-
-        for i in range(17):
-            if self.read_tuple(next_grid, i) in self.tuples[i]:
-                next_value += self.tuples[i][self.read_tuple(next_grid, i)]
 
         for i in range(17):
             if self.read_tuple(self.intermediate, i) in self.tuples[i]:
+                if self.read_tuple(next_grid, i) in self.tuples[i]:
+                    next_value = self.tuples[i][self.read_tuple(next_grid, i)]
+                else:
+                    next_value = 0
                 self.tuples[i][self.read_tuple(self.intermediate, i)] = \
                     self.tuples[i][self.read_tuple(self.intermediate, i)] \
                     + alpha \
-                    * (rew + next_value - self.tuples[i][self.read_tuple(self.intermediate, i)])
+                    * (next_reward + next_value - self.tuples[i][self.read_tuple(self.intermediate, i)])
             else:
                 self.tuples[i][self.read_tuple(self.intermediate, i)] = 0
+        print(self.tuples[i][self.read_tuple(self.intermediate, i)])
+        print(alpha * (next_reward + next_value - self.tuples[i][self.read_tuple(self.intermediate, i)]))
 
     def move_tiles_left(self, grid):
         """
@@ -376,12 +375,12 @@ class game2048:
         """
         if os.path.isfile('tuples2048_method3'):
             with open('tuples2048_method3', 'rb') as file:
-                print("Lecture du fichier tuples2048_method3")
+                #print("Lecture du fichier tuples2048_method3")
                 if os.stat('tuples2048_method3').st_size > 0:
                     self.tuples = pickle.load(file)
         else:
             print("Erreur : Le fichier n'existe pas")
-        self.draw()
+        #self.draw()
 
         while not self.is_game_over():
             self.initial = self.grid_copy()
@@ -392,10 +391,10 @@ class game2048:
             if self.grid != self.initial:
                 self.moveNb = self.moveNb + 1
                 self.add_new_tile()
-                self.draw()
+                #self.draw()
             if self.learn:
                 self.learn_evaluation()
-            pygame.time.wait(50)
+            #pygame.time.wait(50)
 
         print("---------------")
         print("GAME OVER")
@@ -405,7 +404,7 @@ class game2048:
         print("---------------\n")
 
         with open('tuples2048_method3', 'wb') as file:
-            print("Mise à jour du fichier tuples2048_method3")
+            #print("Mise à jour du fichier tuples2048_method3")
             pickle.dump(self.tuples, file)
         pygame.quit()
         quit()
