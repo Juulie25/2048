@@ -3,9 +3,10 @@ import math
 import pickle
 import random
 
-# Suppression du message de bienvenu
+# Suppression du message de bienvenu (faut import pygame après)
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
+
 
 class game2048:
     def __init__(self):
@@ -58,9 +59,9 @@ class game2048:
 
         # Initialisation du jeu avec pygame
         pygame.init()
-        #self.font = pygame.font.SysFont("Arial", 36)
-        #self.screen = pygame.display.set_mode((400, 500))
-        #pygame.display.set_caption("2048 Game")
+        self.font = pygame.font.SysFont("Arial", 36)
+        self.screen = pygame.display.set_mode((400, 500))
+        pygame.display.set_caption("2048 Game")
 
     def add_new_tile(self):
         """
@@ -120,26 +121,29 @@ class game2048:
         # On créer 4 grilles pour observer le résultat des 4 actions
         test1_l = self.grid_copy()
         self.move_tiles_left(test1_l)
-        value_l = self.evaluate(test1_l,"LEFT") if test1_l != self.grid else 0
+        value_l = self.evaluate(test1_l, "LEFT") if test1_l != self.grid else 0
 
         test1_r = self.grid_copy()
         self.move_tiles_right(test1_r)
-        value_r = self.evaluate(test1_r,"RIGHT") if test1_r != self.grid else 0
+        value_r = self.evaluate(test1_r, "RIGHT") if test1_r != self.grid else 0
 
         test1_u = self.grid_copy()
         self.move_tiles_up(test1_u)
-        value_u = self.evaluate(test1_u,"UP") if test1_u != self.grid else 0
+        value_u = self.evaluate(test1_u, "UP") if test1_u != self.grid else 0
 
         test1_d = self.grid_copy()
         self.move_tiles_down(test1_d)
-        value_d = self.evaluate(test1_d,"DOWN") if test1_d != self.grid else 0
+        value_d = self.evaluate(test1_d, "DOWN") if test1_d != self.grid else 0
 
         # On tri une liste pour trouver la plus grande valeur
         # L'avantage de cette méthode est qu'elle fonctionne même en cas d'égalité
         list = [value_l, value_r, value_u, value_d]
         list.sort()
 
-        # on prend la meilleure action 90% du temps et le reste du temps on prend une action aléatoire
+        # Permet d'afficher la liste des valeurs pour le choix
+        # print(list)
+
+        # On prend la meilleure action 90% du temps et le reste du temps on prend une action aléatoire
         choice = random.choice([value_l, value_r, value_u, value_d]) if random.random() >= 0.90 else list[-1]
 
         if choice == value_l:
@@ -183,7 +187,6 @@ class game2048:
                 if self.read_tuple(grid, i) in self.tuples[i]:
                     value += self.tuples[i][self.read_tuple(grid, i)]
         return reward + value
-
 
     def learn_evaluation(self):
         # D'après l'étude du document
@@ -240,8 +243,10 @@ class game2048:
                     * (next_reward + next_value - self.tuples[i][self.read_tuple(self.intermediate, i)])
             else:
                 self.tuples[i][self.read_tuple(self.intermediate, i)] = 0
-        print(self.tuples[i][self.read_tuple(self.intermediate, i)])
-        print(alpha * (next_reward + next_value - self.tuples[i][self.read_tuple(self.intermediate, i)]))
+
+        # Permet d'observer les valeurs des poids et des ajouts de poids
+        # print(self.tuples[i][self.read_tuple(self.intermediate, i)])
+        # print(alpha * (next_reward + next_value - self.tuples[i][self.read_tuple(self.intermediate, i)]))
 
     def move_tiles_left(self, grid):
         """
@@ -375,12 +380,12 @@ class game2048:
         """
         if os.path.isfile('tuples2048_method3'):
             with open('tuples2048_method3', 'rb') as file:
-                #print("Lecture du fichier tuples2048_method3")
+                print("Lecture du fichier tuples2048_method3")
                 if os.stat('tuples2048_method3').st_size > 0:
                     self.tuples = pickle.load(file)
         else:
             print("Erreur : Le fichier n'existe pas")
-        #self.draw()
+        self.draw()
 
         while not self.is_game_over():
             self.initial = self.grid_copy()
@@ -391,10 +396,10 @@ class game2048:
             if self.grid != self.initial:
                 self.moveNb = self.moveNb + 1
                 self.add_new_tile()
-                #self.draw()
+                self.draw()
             if self.learn:
                 self.learn_evaluation()
-            #pygame.time.wait(50)
+            pygame.time.wait(50)
 
         print("---------------")
         print("GAME OVER")
@@ -404,7 +409,7 @@ class game2048:
         print("---------------\n")
 
         with open('tuples2048_method3', 'wb') as file:
-            #print("Mise à jour du fichier tuples2048_method3")
+            print("Mise à jour du fichier tuples2048_method3")
             pickle.dump(self.tuples, file)
         pygame.quit()
         quit()
